@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ErrorTooltipDirective, ErrorTooltipOptions, ValidatorService } from '@ng-error-tooltips';
 
@@ -8,17 +8,18 @@ import { ErrorTooltipDirective, ErrorTooltipOptions, ValidatorService } from '@n
   styleUrl: './app.component.scss',
   imports: [FormsModule, ReactiveFormsModule, ErrorTooltipDirective],
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
 
-	formGroup: FormGroup;
+	formGroup: FormGroup | undefined;
 
   tooltipOptions: ErrorTooltipOptions = {
     placement: 'right',
   }
 
 	constructor(private formBuilder: FormBuilder,
-              private validatorsSvc: ValidatorService) {
-    
+              private validatorsSvc: ValidatorService) { }
+            
+  ngOnInit(): void {
     this.formGroup = this.formBuilder.group({
       nameInput: new FormControl<string>('', { validators: [ this.validatorsSvc.required(), 
                                                              this.validatorsSvc.minLength(3) ] }),
@@ -30,9 +31,9 @@ export class AppComponent {
 
   submit() {
 		// This will trigger the error-tooltips to show:
-		this.formGroup.markAllAsTouched();
+		this.formGroup?.markAllAsTouched();
 
-    if (!this.formGroup.valid) {
+    if (!this.formGroup?.valid) {
 			return;
 		}
   }

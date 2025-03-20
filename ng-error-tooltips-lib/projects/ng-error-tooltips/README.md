@@ -1,63 +1,170 @@
-# NgErrorTooltips
+# NgErrorTooltipsLib
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.0.
+An Angular library for reactive forms that displays tooltips on form inputs with errors, providing a user-friendly way to visualize validation messages.
 
-## Code scaffolding
+The latest library version is compatible with **Angular 19**.
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
 
-```bash
-ng generate component component-name
+## Demo
+Coming soon
+
+---
+
+## Install
+
+To install the library, enter the following command in your console:
+```
+npm i ng-error-tooltips
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Setup
+### For apps based on `Standalone Components`
+Import ErrorTooltipDirective directly in your component:
+```ts
+import { ErrorTooltipDirective } from '@ng-error-tooltips';
 
-```bash
-ng generate --help
+@Component({
+    selector: 'app-root',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.scss'],
+    imports: [ErrorTooltipDirective]
+})
 ```
 
-## Building
+## Usage
+Define a reactive form with validators in your TypeScript component. You can also use validators from the `ValidatorService`, which is part of the current library:
 
-To build the library, run:
+```ts
+import { Component } from '@angular/core';
+import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { ErrorTooltipDirective, ValidatorService } from '@ng-error-tooltips';
 
-```bash
-ng build ng-error-tooltips
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.scss',
+  imports: [FormsModule, ReactiveFormsModule, ErrorTooltipDirective],
+})
+export class AppComponent {
+
+	formGroup: FormGroup;
+
+	constructor(private formBuilder: FormBuilder,
+                private validatorsSvc: ValidatorService) {
+    
+    this.formGroup = this.formBuilder.group({
+      nameInput: new FormControl<string>('', { validators: [ this.validatorsSvc.required(), 
+                                                             this.validatorsSvc.minLength(3) ] }),
+    });
+  }
+}
 ```
 
-This command will compile your project, and the build artifacts will be placed in the `dist/` directory.
+Create the corresponding form in your HTML file and add `ngErrorTooltip` to the form fields where error tooltips should be displayed.
 
-### Publishing the Library
+```html
+  <form [formGroup]="formGroup" (ngSubmit)="submit()">
 
-Once the project is built, you can publish your library by following these steps:
+    <h4>Sample Form</h4>
 
-1. Navigate to the `dist` directory:
-   ```bash
-   cd dist/ng-error-tooltips
-   ```
-
-2. Run the `npm publish` command to publish your library to the npm registry:
-   ```bash
-   npm publish
-   ```
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
+    <input
+        ngErrorTooltip
+        formControlName="nameInput"        
+        placeholder="Enter your name*"
+        type="text">
+  
+    <button type="submit">Submit</button>
+  
+  </form>
 ```
 
-## Running end-to-end tests
+### Two ways to pass additional properties
 
-For end-to-end (e2e) testing, run:
+You can pass separate properties, such as `placement`, as shown in the example below:
 
-```bash
-ng e2e
+```html
+    <input
+        ngErrorTooltip [placement]="'right'"
+        formControlName="nameInput"        
+        placeholder="Enter your name*"
+        type="text">
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+Alternatively, you can pass one or more properties via an `ErrorTooltipOptions` object:
 
-## Additional Resources
+```ts
+  tooltipOptions: ErrorTooltipOptions = {
+    placement: 'right',
+  }
+```
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+```html
+    <input
+        formControlName="ageInput"
+        ngErrorTooltip [options]="tooltipOptions"
+        class="form-control"
+        placeholder="Enter your age*"
+        type="number">
+```
+
+
+## Properties
+
+| name                  | type                                  | default | description |
+|-----------------------|---------------------------------------|---------|-------------|
+| id                    | string \| number                      | 0       | A custom id that can be assigned to the tooltip. |
+| showFirstErrorOnly    | boolean                               | false   | Whether the tooltip should only display the first error if the form-input contains multiple errors |
+| placement             | Placement                             | 'bottom-left'   | The position of the tooltip. |
+| zIndex                | number                                | 1101    | The z-index of the tooltip. |
+| tooltipClass          | string                                | ''      | Any additional classes to be passed to the tooltip (target them with `::ng-deep`). |
+| shadow                | boolean                               | true    | If true, the tooltip will have a shadow. |
+| offset                | number                                | 8       | The offset of the tooltip relative to the item. |
+| width                 | string                                | ''      | The width of the tooltip. |
+| maxWidth              | string                                | '350px' | The maximum width of the tooltip. |
+| pointerEvents         | "auto" \| "none"                      | 'auto'  | Defines whether or not the tooltip reacts to pointer events. |
+---
+
+
+### Mocking when component under test is a standalone component
+In the test initialization, you might need to use `.overrideComponent` to override the actual directive with the mock directive provided by the library. Additionally, the library provides `MockValidatorService` in case you are using the built-in `ValidatorService`:
+
+```ts
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { AppComponent } from './app.component';
+import { ErrorTooltipDirective, MockErrorTooltipDirective, MockValidatorService, ValidatorService } from '@ng-error-tooltips';
+import { FormBuilder } from '@angular/forms';
+
+describe('AppComponent', () => {
+  let component: AppComponent;
+	let fixture: ComponentFixture<AppComponent>;
+
+  beforeEach(async () => {
+
+    await TestBed.configureTestingModule({
+      imports: [AppComponent],
+      providers: [
+        FormBuilder,
+        { provide: ValidatorService, useClass: MockValidatorService }
+      ]
+    })
+    .overrideComponent(AppComponent, {
+      remove: {
+        imports: [
+          ErrorTooltipDirective
+        ]
+      },
+      add: {
+        imports: [
+          MockErrorTooltipDirective
+        ]
+      }
+    })
+    .compileComponents();
+
+    fixture = TestBed.createComponent(AppComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+  });
+})
+```

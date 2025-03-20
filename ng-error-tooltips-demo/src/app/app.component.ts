@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ErrorTooltipDirective, ValidatorService } from '@ng-error-tooltips';
+import { ErrorTooltipDirective, ErrorTooltipOptions, ValidatorService } from '@ng-error-tooltips';
 
 @Component({
   selector: 'app-root',
@@ -11,6 +11,10 @@ import { ErrorTooltipDirective, ValidatorService } from '@ng-error-tooltips';
 export class AppComponent {
 
 	formGroup: FormGroup;
+
+  tooltipOptions: ErrorTooltipOptions = {
+    placement: 'right',
+  }
 
 	constructor(private formBuilder: FormBuilder,
               private validatorsSvc: ValidatorService) {

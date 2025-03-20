@@ -2,10 +2,26 @@
   "name": "ng-error-tooltips",
   "version": "0.0.1",
   "description": "Error-tooltips for Angular",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mkeller1992/ng-error-tooltips"
+  },
   "author": {
     "name": "Matthias Keller"
   },
+  "keywords": [
+    "Angular",
+    "Angular 2",
+    "ng2",
+    "ngx",
+    "tooltip",
+    "error-tooltip",
+    "reactive form"
+  ],
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mkeller1992/ng-error-tooltips/issues"
+  },
   "peerDependencies": {
     "@angular/common": "^19.2.0",
     "@angular/core": "^19.2.0",

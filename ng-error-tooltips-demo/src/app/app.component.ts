@@ -22,7 +22,7 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     this.formGroup = this.formBuilder.group({
       nameInput: new FormControl<string>('', { validators: [ this.validatorsSvc.required(), 
-                                                             this.validatorsSvc.minLength(3) ] }),
+                                                             this.validatorsSvc.minLength(4) ] }),
       ageInput: new FormControl<string>('', { validators: [ this.validatorsSvc.required(), 
                                                             this.validatorsSvc.minValue(10),
                                                             this.validatorsSvc.maxValue(100) ] }),

@@ -10,8 +10,8 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "ng-error-tooltips": [
-        "./dist/ng-error-tooltips"
+      "@ng-error-tooltips": [
+        "../ng-error-tooltips-lib/dist/ng-error-tooltips"
       ]
     },
     "skipLibCheck": true,

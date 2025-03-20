@@ -41,20 +41,20 @@ describe('AppComponent', () => {
   });
 
   it('should initialize nameInput control with correct validators', () => {
-    const nameInput = component.formGroup.get('nameInput');
+    const nameInput = component?.formGroup?.get('nameInput');
     expect(nameInput).toBeTruthy();
     expect(nameInput?.validator).toBeTruthy();
   });
 
   it('should initialize ageInput control with correct validators', () => {
-    const ageInput = component.formGroup.get('ageInput');
+    const ageInput = component?.formGroup?.get('ageInput');
     expect(ageInput).toBeTruthy();
     expect(ageInput?.validator).toBeTruthy();
   });
 
   it('should mark all controls as touched when form is invalid on submit', () => {
-    const nameInput = component.formGroup.get('nameInput');
-    const ageInput = component.formGroup.get('ageInput');
+    const nameInput = component?.formGroup?.get('nameInput');
+    const ageInput = component?.formGroup?.get('ageInput');
 
     // Set form controls to invalid values
     nameInput?.setValue('');

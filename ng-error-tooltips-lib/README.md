@@ -125,7 +125,7 @@ Alternatively, you can pass one or more properties via an `ErrorTooltipOptions` 
 ---
 
 
-### Mocking when component under test is a standalone component
+### Angular Jest Unit-Tests: Mocking ErrorTooltipDirective and ValidatorService
 In the test initialization, you might need to use `.overrideComponent` to override the actual directive with the mock directive provided by the library. Additionally, the library provides `MockValidatorService` in case you are using the built-in `ValidatorService`:
 
 ```ts

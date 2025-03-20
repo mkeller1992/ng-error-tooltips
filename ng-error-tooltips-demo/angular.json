@@ -17,10 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": {
-              "base": "dist/ng-error-tooltips-demo",
-			        "browser": ""
-            },
+            "outputPath": "dist/ng-error-tooltips-demo",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [

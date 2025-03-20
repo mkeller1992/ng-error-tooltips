@@ -1,0 +1,31 @@
+<div class="container mt-5">
+  <form [formGroup]="formGroup" (ngSubmit)="submit()">
+
+    <h4 class="mb-3">
+      Sample Form
+    </h4>
+
+    <div class="mb-3">
+      <input
+        formControlName="nameInput"
+        ngErrorTooltip [placement]="'right'"
+        class="form-control mb-4"
+        placeholder="Enter your name*"
+        type="text">
+
+      <input
+        formControlName="ageInput"
+        ngErrorTooltip [placement]="'right'"
+        class="form-control"
+        placeholder="Enter your age*"
+        type="number">
+    </div>
+  
+    <button 
+      class="btn btn-primary mt-5"
+      type="submit">
+      Submit
+    </button>
+  
+  </form>
+</div>

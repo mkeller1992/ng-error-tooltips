@@ -1,0 +1,13 @@
+
+.form-control {
+    width: 300px;
+}
+
+input {
+    &.ng-valid.ng-touched {
+        border: 3px solid green;
+    }
+    &.ng-invalid.ng-touched {
+        border: 3px solid red;
+    }
+}

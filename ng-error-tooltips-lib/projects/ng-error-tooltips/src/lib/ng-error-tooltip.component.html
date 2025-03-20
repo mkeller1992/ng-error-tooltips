@@ -1,0 +1,15 @@
+
+<div class="tooltip-arrow"></div>
+
+<div class="tooltip-label" (click)="handleTooltipClick()">
+
+	@if (errors.length > 1) {
+		<ul class="tooltip-error-list">
+			@for (err of errors; track err) { <li>{{ err }}</li> }
+		</ul>
+	}
+	@else {
+		{{ errors[0] }}
+	}
+	
+</div>

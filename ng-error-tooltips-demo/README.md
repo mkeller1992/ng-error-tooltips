@@ -51,9 +51,9 @@ import { ErrorTooltipDirective, CustomValidators } from '@ng-error-tooltips';
 })
 export class AppComponent {
 
-	formGroup: FormGroup;
+  formGroup: FormGroup;
 
-	constructor(private formBuilder: FormBuilder) {
+  constructor(private formBuilder: FormBuilder) {
     
     this.formGroup = this.formBuilder.group({
       nameInput: new FormControl<string>('', { validators: [ CustomValidators.required(), 
@@ -66,19 +66,19 @@ export class AppComponent {
 Create the corresponding form in your HTML file and add `ngErrorTooltip` to the form fields where error tooltips should be displayed.
 
 ```html
-  <form [formGroup]="formGroup" (ngSubmit)="submit()">
+<form [formGroup]="formGroup" (ngSubmit)="submit()">
 
-    <h4>Sample Form</h4>
+  <h4>Sample Form</h4>
 
-    <input
-        ngErrorTooltip
-        formControlName="nameInput"        
-        placeholder="Enter your name*"
-        type="text">
-  
-    <button type="submit">Submit</button>
-  
-  </form>
+  <input
+      ngErrorTooltip
+      formControlName="nameInput"        
+      placeholder="Enter your name*"
+      type="text">
+
+  <button type="submit">Submit</button>
+
+</form>
 ```
 
 ### Two ways to pass additional properties
@@ -86,30 +86,30 @@ Create the corresponding form in your HTML file and add `ngErrorTooltip` to the 
 You can pass separate properties, such as `placement`, as shown in the example below:
 
 ```html
-    <input
-        ngErrorTooltip [placement]="'right'"
-        formControlName="nameInput"        
-        placeholder="Enter your name*"
-        type="text">
+<input
+    ngErrorTooltip [placement]="'right'"
+    formControlName="nameInput"        
+    placeholder="Enter your name*"
+    type="text">
 ```
 
 Alternatively, you can pass one or more properties via an `ErrorTooltipOptions` object:
 
 ```ts
-  import { ErrorTooltipOptions } from '@ng-error-tooltips';
+import { ErrorTooltipOptions } from '@ng-error-tooltips';
 
-  tooltipOptions: ErrorTooltipOptions = {
-    placement: 'right',
-  }
+tooltipOptions: ErrorTooltipOptions = {
+  placement: 'right',
+}
 ```
 
 ```html
-    <input
-        formControlName="ageInput"
-        ngErrorTooltip [options]="tooltipOptions"
-        class="form-control"
-        placeholder="Enter your age*"
-        type="number">
+<input
+    formControlName="ageInput"
+    ngErrorTooltip [options]="tooltipOptions"
+    class="form-control"
+    placeholder="Enter your age*"
+    type="number">
 ```
 
 
@@ -141,7 +141,7 @@ import { FormBuilder } from '@angular/forms';
 
 describe('AppComponent', () => {
   let component: AppComponent;
-	let fixture: ComponentFixture<AppComponent>;
+  let fixture: ComponentFixture<AppComponent>;
 
   beforeEach(async () => {
 

@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { ErrorTooltipDirective, MockErrorTooltipDirective, MockValidatorService, ValidatorService } from '@ng-error-tooltips';
-import { FormBuilder } from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
 
 describe('AppComponent', () => {
   let component: AppComponent;
@@ -13,6 +13,7 @@ describe('AppComponent', () => {
       imports: [AppComponent],
       providers: [
         FormBuilder,
+        Validators,
         { provide: ValidatorService, useClass: MockValidatorService }
       ]
     })

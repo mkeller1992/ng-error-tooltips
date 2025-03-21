@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ErrorTooltipDirective, ErrorTooltipOptions, ValidatorService } from '@ng-error-tooltips';
+import { ErrorTooltipDirective, ErrorTooltipOptions } from '@ng-error-tooltips';
 
 @Component({
   selector: 'app-root',
@@ -16,8 +16,7 @@ export class AppComponent implements OnInit {
     placement: 'right',
   }
 
-	constructor(private formBuilder: FormBuilder,
-              private validatorsSvc: Validators) { }
+	constructor(private formBuilder: FormBuilder) { }
             
   ngOnInit(): void {
     this.formGroup = this.formBuilder.group({

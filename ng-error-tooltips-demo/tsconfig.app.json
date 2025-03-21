@@ -5,6 +5,7 @@
   "compilerOptions": {
     "outDir": "./out-tsc/app",
     "types": [],
+    
     /* IMPORTANT !*/
     /* If you remove the following lines this app is not gonna work in AOT mode! */
     "paths": {

@@ -1,10 +1,9 @@
 {
   "name": "ng-error-tooltips-demo",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --port 4206",
-    "aot": "ng serve --configuration=production",
+    "start": "ng serve --configuration=production --port 4206",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "jest --coverage",

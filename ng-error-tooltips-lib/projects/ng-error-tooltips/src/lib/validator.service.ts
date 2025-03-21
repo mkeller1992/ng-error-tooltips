@@ -1,14 +1,9 @@
-import { Injectable } from '@angular/core';
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
-@Injectable({
-	providedIn: 'root'
-})
-
-export class ValidatorService {
+export class CustomValidators {
 
 	// Format numbers without decimal places using the Swiss locale
-	private formatNumber(value: number): string {
+	private static formatNumber(value: number): string {
 		return new Intl.NumberFormat('de-CH', {
 			minimumFractionDigits: 0,
 			maximumFractionDigits: 0
@@ -17,33 +12,33 @@ export class ValidatorService {
 
 	/* ERROR MESSAGES for VALIDATORS */
 
-	ERROR_MESSAGES = {
+	private static ERROR_MESSAGES = {
 		required: () => 'Eingabe erforderlich',
-		minlength: (minLength: number) => `Min. Länge: ${this.formatNumber(minLength)} Zeichen`,
-		maxLength: (maxLength: number) => `Max. Länge: ${this.formatNumber(maxLength)} Zeichen`,
+		minlength: (minLength: number) => `Min. Länge: ${CustomValidators.formatNumber(minLength)} Zeichen`,
+		maxLength: (maxLength: number) => `Max. Länge: ${CustomValidators.formatNumber(maxLength)} Zeichen`,
 
 		minValue: (minValue: number) => `Muss mindestens ${minValue} betragen`,
-		formattedMinValue: (minValue: number) => `Muss mindestens ${this.formatNumber(minValue)} betragen`,
+		formattedMinValue: (minValue: number) => `Muss mindestens ${CustomValidators.formatNumber(minValue)} betragen`,
 
 		maxValue: (maxValue: number) => `Darf maximal ${maxValue} betragen`,
-		formattedMaxValue: (maxValue: number) => `Darf maximal ${this.formatNumber(maxValue)} betragen`,
+		formattedMaxValue: (maxValue: number) => `Darf maximal ${CustomValidators.formatNumber(maxValue)} betragen`,
 
 		smallerThan: (referenceValue: number) => `Muss kleiner sein als ${referenceValue}`,
-		formattedSmallerThan: (referenceValue: number) => `Muss kleiner sein als ${this.formatNumber(referenceValue)}`,
+		formattedSmallerThan: (referenceValue: number) => `Muss kleiner sein als ${CustomValidators.formatNumber(referenceValue)}`,
 
 		greaterThan: (referenceValue: number) => `Muss grösser sein als ${referenceValue}`,
-		formattedGreaterThan: (referenceValue: number) => `Muss grösser sein als ${this.formatNumber(referenceValue)}`,
+		formattedGreaterThan: (referenceValue: number) => `Muss grösser sein als ${CustomValidators.formatNumber(referenceValue)}`,
 
 		lettersOnly: () => 'Nur Buchstaben sind erlaubt',
-		minNumberOfDigits: (minNumb: number) => `Muss mindestens ${this.formatNumber(minNumb)} Nummern enthalten`,
-		minNumberOfCapitalLetters: (minNumb: number) => `Muss mindestens ${this.formatNumber(minNumb)} Grossbuchstaben enthalten`,
+		minNumberOfDigits: (minNumb: number) => `Muss mindestens ${CustomValidators.formatNumber(minNumb)} Nummern enthalten`,
+		minNumberOfCapitalLetters: (minNumb: number) => `Muss mindestens ${CustomValidators.formatNumber(minNumb)} Grossbuchstaben enthalten`,
 
 		invalidEmail: () => 'Ungültige E-Mail Adresse'
 	};
 
 	/* VALIDATORS (returning error-messages as well) */
 
-	required(errorMessage?: string): ValidatorFn {
+	static required(errorMessage?: string): ValidatorFn {
 		return (control: AbstractControl): ValidationErrors | null => {
 			const errorMsg = errorMessage ?? this.ERROR_MESSAGES.required();
 			const isEmpty = control.value === null || control.value === undefined || control.value === '';
@@ -52,7 +47,7 @@ export class ValidatorService {
 		};
 	}
 
-	minLength(minLength: number, errorMessage?: string): ValidatorFn {
+	static minLength(minLength: number, errorMessage?: string): ValidatorFn {
 		return (control: AbstractControl): ValidationErrors | null => {
 			const errorMsg = errorMessage ?? this.ERROR_MESSAGES.minlength(minLength);
 			// object-property-name must be unique among validators:
@@ -60,7 +55,7 @@ export class ValidatorService {
 		};
 	}
 
-	maxLength(maxLength: number, errorMessage?: string): ValidatorFn {
+	static maxLength(maxLength: number, errorMessage?: string): ValidatorFn {
 		return (control: AbstractControl): ValidationErrors | null => {
 			const errorMsg = errorMessage ?? this.ERROR_MESSAGES.maxLength(maxLength);
 			// object-property-name must be unique among validators:
@@ -68,7 +63,7 @@ export class ValidatorService {
 		};
 	}
 
-	smallerThan(referenceValue: number, errorMessage?: string): ValidatorFn {
+	static smallerThan(referenceValue: number, errorMessage?: string): ValidatorFn {
 		return (control: AbstractControl): ValidationErrors | null => {
 			const value = control.value;
 			// Skip validation for null, undefined, or empty string
@@ -88,7 +83,7 @@ export class ValidatorService {
 		};
 	}
 
-	formattedSmallerThan(referenceValue: number, errorMessage?: string): ValidatorFn {
+	static formattedSmallerThan(referenceValue: number, errorMessage?: string): ValidatorFn {
 		return (control: AbstractControl): ValidationErrors | null => {
 			const value = control.value;
 			// Skip validation for null, undefined, or empty string
@@ -108,7 +103,7 @@ export class ValidatorService {
 		};
 	}
 
-	greaterThan(referenceValue: number, errorMessage?: string): ValidatorFn {
+	static greaterThan(referenceValue: number, errorMessage?: string): ValidatorFn {
 		return (control: AbstractControl): ValidationErrors | null => {
 			const value = control.value;
 			// Skip validation for null, undefined, or empty string
@@ -126,7 +121,7 @@ export class ValidatorService {
 		};
 	}
 
-	formattedGreaterThan(referenceValue: number, errorMessage?: string): ValidatorFn {
+	static formattedGreaterThan(referenceValue: number, errorMessage?: string): ValidatorFn {
 		return (control: AbstractControl): ValidationErrors | null => {
 			const value = control.value;
 			// Skip validation for null, undefined, or empty string
@@ -144,7 +139,7 @@ export class ValidatorService {
 		};
 	}
 
-	minValue(referenceValue: number, errorMessage?: string): ValidatorFn {
+	static minValue(referenceValue: number, errorMessage?: string): ValidatorFn {
 		return (control: AbstractControl): ValidationErrors | null => {
 			const value = control.value;
 			// Skip validation for null, undefined, or empty string
@@ -162,7 +157,7 @@ export class ValidatorService {
 		};
 	}
 
-	formattedMinValue(referenceValue: number, errorMessage?: string): ValidatorFn {
+	static formattedMinValue(referenceValue: number, errorMessage?: string): ValidatorFn {
 		return (control: AbstractControl): ValidationErrors | null => {
 			const value = control.value;
 			// Skip validation for null, undefined, or empty string
@@ -180,7 +175,7 @@ export class ValidatorService {
 		};
 	}
 
-	maxValue(referenceValue: number, errorMessage?: string): ValidatorFn {
+	static maxValue(referenceValue: number, errorMessage?: string): ValidatorFn {
 		return (control: AbstractControl): ValidationErrors | null => {
 			const value = control.value;
 			// Skip validation for null, undefined, or empty string
@@ -200,7 +195,7 @@ export class ValidatorService {
 		};
 	}
 
-	formattedMaxValue(referenceValue: number, errorMessage?: string): ValidatorFn {
+	static formattedMaxValue(referenceValue: number, errorMessage?: string): ValidatorFn {
 		return (control: AbstractControl): ValidationErrors | null => {
 			const value = control.value;
 			// Skip validation for null, undefined, or empty string
@@ -220,7 +215,7 @@ export class ValidatorService {
 		};
 	}
 
-	lettersOnly(errorMessage?: string): ValidatorFn {
+	static lettersOnly(errorMessage?: string): ValidatorFn {
 		return (control: AbstractControl): ValidationErrors | null => {
 			const errorMsg = errorMessage ?? this.ERROR_MESSAGES.lettersOnly();
 			const regex = new RegExp('^[A-Za-zÀ-ÖØ-öø-ÿ ]*$');
@@ -230,7 +225,7 @@ export class ValidatorService {
 		};
 	}
 
-	email(errorMessage?: string): ValidatorFn {
+	static email(errorMessage?: string): ValidatorFn {
 		return (control: AbstractControl): ValidationErrors | null => {
 		  const value = control.value;
 
@@ -255,7 +250,7 @@ export class ValidatorService {
 
 	/* Can show *MULTIPLE* errors at once: */
 
-	passwordErrors(minLength: number, minDigits: number, minCapitalLetters: number){
+	static passwordErrors(minLength: number, minDigits: number, minCapitalLetters: number){
 		return (control:AbstractControl)=> {
 			const isEmpty = !control.value.length;
 			const violatesMinLength =  isEmpty || control.value.length < minLength;
@@ -280,7 +275,7 @@ export class ValidatorService {
 		}
 	}
 
-	regexPattern(pattern: RegExp, errorMessage: string): ValidatorFn {
+	static regexPattern(pattern: RegExp, errorMessage: string): ValidatorFn {
 		return (control: AbstractControl): ValidationErrors | null => {
 			const value = control.value;
 

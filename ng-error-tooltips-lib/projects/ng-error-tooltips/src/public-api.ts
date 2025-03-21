@@ -6,5 +6,4 @@ export * from './lib/error-tooltip-options.interface';
 export * from './lib/validator.service';
 
 // Export the mocks
-export * from './lib/mocks/mock-validator.service';
 export * from './lib/mocks/mock-error-tooltip.directive';

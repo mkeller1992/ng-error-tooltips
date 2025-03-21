@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
-import { ErrorTooltipDirective, MockErrorTooltipDirective, MockValidatorService, ValidatorService } from '@ng-error-tooltips';
-import { FormBuilder, Validators } from '@angular/forms';
+import { ErrorTooltipDirective, MockErrorTooltipDirective } from '@ng-error-tooltips';
+import { FormBuilder } from '@angular/forms';
 
 describe('AppComponent', () => {
   let component: AppComponent;
@@ -11,11 +11,7 @@ describe('AppComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [AppComponent],
-      providers: [
-        FormBuilder,
-        Validators,
-        { provide: ValidatorService, useClass: MockValidatorService }
-      ]
+      providers: [FormBuilder]
     })
     .overrideComponent(AppComponent, {
       remove: {

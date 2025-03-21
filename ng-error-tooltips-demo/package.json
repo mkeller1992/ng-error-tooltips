@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --port 4206",
+    "aot": "ng serve --configuration=production",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "jest --coverage",

@@ -4,7 +4,15 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/app",
-    "types": []
+    "types": [],
+    /* IMPORTANT !*/
+    /* If you remove the following lines this app is not gonna work in AOT mode! */
+    "paths": {
+      "@ng-error-tooltips": [
+        "../ng-error-tooltips-lib/dist/ng-error-tooltips"
+      ],
+      "@angular/*": [ "./node_modules/@angular/*"]
+    }
   },
   "files": [
     "src/main.ts"

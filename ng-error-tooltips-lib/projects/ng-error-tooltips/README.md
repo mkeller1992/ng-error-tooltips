@@ -1,5 +1,9 @@
 # NgErrorTooltipsLib
 
+[![npm version](https://badge.fury.io/js/ng-error-tooltips.svg)](https://badge.fury.io/js/ng-error-tooltips)
+![build status](https://github.com/mkeller1992/ng-error-tooltips/actions/workflows/npm_publish.yml/badge.svg)
+[![codecov](https://codecov.io/gh/mkeller1992/ng-error-tooltips/graph/badge.svg?token=FDYFIOR4LQ)](https://codecov.io/gh/mkeller1992/ng-error-tooltips)
+
 An Angular library for reactive forms that displays tooltips on form inputs with errors, providing a user-friendly way to visualize validation messages.
 
 The latest library version is compatible with **Angular 19**.

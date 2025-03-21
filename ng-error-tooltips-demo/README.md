@@ -1,12 +1,15 @@
 # NgErrorTooltipsLib
 
+![build status](https://github.com/mkeller1992/ng-error-tooltips/actions/workflows/npm_publish.yml/badge.svg)
+[![codecov](https://codecov.io/gh/mkeller1992/ng-error-tooltips/graph/badge.svg?token=FDYFIOR4LQ)](https://codecov.io/gh/mkeller1992/ng-error-tooltips)
+
 An Angular library for reactive forms that displays tooltips on form inputs with errors, providing a user-friendly way to visualize validation messages.
 
 The latest library version is compatible with **Angular 19**.
 
 
 ## Demo
-Coming soon
+https://mkeller1992.github.io/ng-error-tooltips/
 
 ---
 
@@ -32,12 +35,12 @@ import { ErrorTooltipDirective } from '@ng-error-tooltips';
 ```
 
 ## Usage
-Define a reactive form with validators in your TypeScript component. You can also use validators from the `ValidatorService`, which is part of the current library:
+Define a reactive form with validators in your TypeScript component. You can also use validators from the `CustomValidators` class, which is part of the current library:
 
 ```ts
 import { Component } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ErrorTooltipDirective, ValidatorService } from '@ng-error-tooltips';
+import { ErrorTooltipDirective, CustomValidators } from '@ng-error-tooltips';
 
 @Component({
   selector: 'app-root',
@@ -49,12 +52,11 @@ export class AppComponent {
 
 	formGroup: FormGroup;
 
-	constructor(private formBuilder: FormBuilder,
-                private validatorsSvc: ValidatorService) {
+	constructor(private formBuilder: FormBuilder) {
     
     this.formGroup = this.formBuilder.group({
-      nameInput: new FormControl<string>('', { validators: [ this.validatorsSvc.required(), 
-                                                             this.validatorsSvc.minLength(3) ] }),
+      nameInput: new FormControl<string>('', { validators: [ CustomValidators.required(), 
+                                                             CustomValidators.minLength(3) ] }),
     });
   }
 }
@@ -93,6 +95,8 @@ You can pass separate properties, such as `placement`, as shown in the example b
 Alternatively, you can pass one or more properties via an `ErrorTooltipOptions` object:
 
 ```ts
+  import { ErrorTooltipOptions } from '@ng-error-tooltips';
+
   tooltipOptions: ErrorTooltipOptions = {
     placement: 'right',
   }
@@ -126,12 +130,12 @@ Alternatively, you can pass one or more properties via an `ErrorTooltipOptions` 
 
 
 ### Angular Jest Unit-Tests: Mocking ErrorTooltipDirective and ValidatorService
-In the test initialization, you might need to use `.overrideComponent` to override the actual directive with the mock directive provided by the library. Additionally, the library provides `MockValidatorService` in case you are using the built-in `ValidatorService`:
+In the test initialization, you might need to use `.overrideComponent` to override the actual directive with the mock directive provided by the library.
 
 ```ts
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
-import { ErrorTooltipDirective, MockErrorTooltipDirective, MockValidatorService, ValidatorService } from '@ng-error-tooltips';
+import { ErrorTooltipDirective, MockErrorTooltipDirective } from '@ng-error-tooltips';
 import { FormBuilder } from '@angular/forms';
 
 describe('AppComponent', () => {
@@ -143,8 +147,7 @@ describe('AppComponent', () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
       providers: [
-        FormBuilder,
-        { provide: ValidatorService, useClass: MockValidatorService }
+        FormBuilder
       ]
     })
     .overrideComponent(AppComponent, {

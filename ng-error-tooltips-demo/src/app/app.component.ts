@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ErrorTooltipDirective, ErrorTooltipOptions, ValidatorService } from '@ng-error-tooltips';
 
 @Component({
@@ -17,15 +17,12 @@ export class AppComponent implements OnInit {
   }
 
 	constructor(private formBuilder: FormBuilder,
-              private validatorsSvc: ValidatorService) { }
+              private validatorsSvc: Validators) { }
             
   ngOnInit(): void {
     this.formGroup = this.formBuilder.group({
-      nameInput: new FormControl<string>('', { validators: [ this.validatorsSvc.required(), 
-                                                             this.validatorsSvc.minLength(4) ] }),
-      ageInput: new FormControl<string>('', { validators: [ this.validatorsSvc.required(), 
-                                                            this.validatorsSvc.minValue(10),
-                                                            this.validatorsSvc.maxValue(100) ] }),
+      nameInput: new FormControl<string>('', { validators: [ Validators.required ] }),
+      ageInput: new FormControl<string>('', { validators: [ Validators.required] }),
     });
   }
 

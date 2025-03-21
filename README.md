@@ -1,4 +1,4 @@
-# NgErrorTooltipsLib
+# ng-error-tooltips
 
 [![npm version](https://badge.fury.io/js/ng-error-tooltips.svg)](https://badge.fury.io/js/ng-error-tooltips)
 ![build status](https://github.com/mkeller1992/ng-error-tooltips/actions/workflows/npm_publish.yml/badge.svg)

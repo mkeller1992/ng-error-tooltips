@@ -1,7 +1,8 @@
 {
   "name": "ng-error-tooltips",
-  "version": "0.0.1",
+  "version": "19.0.0",
   "description": "Error-tooltips for Angular",
+  "homepage": "https://mkeller1992.github.io/ng-error-tooltips",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mkeller1992/ng-error-tooltips"

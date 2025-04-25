@@ -163,7 +163,7 @@ export class ErrorTooltipDirective implements OnInit, OnDestroy {
 			.subscribe();
 	}
 
-	/* Listens for changes in the position of the form control element by periodically checking its position every 500ms. */
+	/* Listens for changes in the position of the form control element by periodically checking its position every 300ms. */
 	/* If the position changes, and the tooltip is visible, it updates the position of the tooltip accordingly. */
 	/* Needs to be active while tooltip is visible */
 	private listenForPositionChangesOfFormControl() {

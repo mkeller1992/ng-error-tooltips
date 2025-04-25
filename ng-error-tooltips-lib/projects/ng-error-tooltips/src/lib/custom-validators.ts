@@ -41,7 +41,8 @@ export class CustomValidators {
 	static required(errorMessage?: string): ValidatorFn {
 		return (control: AbstractControl): ValidationErrors | null => {
 			const errorMsg = errorMessage ?? this.ERROR_MESSAGES.required();
-			const isEmpty = control.value === null || control.value === undefined || control.value === '';
+			const isEmpty = control.value === null || control.value === undefined || control.value === ''
+							|| (Array.isArray(control.value) && control.value.length === 0);
 			// object-property-name must be unique among validators:
 			return isEmpty ? { required: errorMsg } : null;
 		};

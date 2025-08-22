@@ -7,6 +7,7 @@
 An Angular library for reactive forms that displays tooltips on form inputs with errors, providing a user-friendly way to visualize validation messages.
 
 The latest library version is compatible with **Angular 20**.
+Starting with version 20.1.0, `ng-error-tooltips` is fully **zoneless-compatible**. 
 
 
 ## Demo

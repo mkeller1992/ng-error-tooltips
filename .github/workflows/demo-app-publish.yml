@@ -24,7 +24,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '24.x'
 
       - name: Identify and set the latest 'v'-prefixed tag from the specified branch
         run: |
@@ -46,7 +46,7 @@ jobs:
           (cd ./${{ env.DEMO_APP_FOLDER_NAME }} && npm link ${{ env.LIB_NAME }})
 
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
         working-directory: ./${{ env.DEMO_APP_FOLDER_NAME }}
 
       - name: Run Tests

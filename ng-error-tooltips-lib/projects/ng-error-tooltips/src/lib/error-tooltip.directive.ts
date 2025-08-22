@@ -1,4 +1,4 @@
-import { ApplicationRef, ComponentRef, Directive, ElementRef, Injector, Input, OnDestroy, OnInit, ViewContainerRef } from '@angular/core';
+import { ApplicationRef, ComponentRef, Directive, ElementRef, inject, Injector, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewContainerRef } from '@angular/core';
 import { ControlContainer, FormGroupDirective, NgControl } from '@angular/forms';
 
 import { Subject, filter, fromEvent, interval, merge, race, takeUntil, tap } from 'rxjs';
@@ -12,7 +12,12 @@ import { NgErrorTooltipComponent } from './ng-error-tooltip.component';
 	selector: '[ngErrorTooltip]'
 })
 
-export class ErrorTooltipDirective implements OnInit, OnDestroy {
+export class ErrorTooltipDirective implements OnInit, OnDestroy, OnChanges {
+	private readonly formControlRef = inject<ElementRef<HTMLElement>>(ElementRef);
+	private readonly viewContainerRef = inject(ViewContainerRef);
+	private readonly injector = inject(Injector);
+	private readonly controlContainer = inject(ControlContainer);
+	private readonly ngControl= inject(NgControl, { self: true, optional: true });
 
 	// A merge of all options that were passed in various ways:
 	private mergedOptions!: ErrorTooltipOptions;
@@ -76,43 +81,39 @@ export class ErrorTooltipDirective implements OnInit, OnDestroy {
 	}
 
 
-	private ngControl: NgControl;
 	private formControlPosition: DOMRect | undefined;
 	private refToTooltipComponent: ComponentRef<NgErrorTooltipComponent> | undefined;
 	private tooltipComponent: NgErrorTooltipComponent | undefined;
+
+	private lastOptionsKey = '';
 
 	private isTooltipCreated = false;
 
 	private tooltipDestroyed$ = new Subject<void>();
 	private destroyAll$ = new Subject<void>();
 
-	constructor(private formControlRef: ElementRef,
-				private viewContainerRef: ViewContainerRef,
-				private appRef: ApplicationRef,
-				private injector: Injector,
-				private controlContainer: ControlContainer) {
-
-    	this.ngControl = this.injector.get(NgControl);
-	}
 
 	ngOnInit(): void {
 
 		// Map tooltip-options:
     	this.mergedOptions = this.getMergedTooltipOptions();
+		this.lastOptionsKey = JSON.stringify(this.mergedOptions);
 
 		// Update tooltip 'on submit':
 		this.handleTooltipVisibilityOnFormSubmission();
-
-		/*
-		// Subscribes to the changes of the form-element:
-		this.ngControl.control?.valueChanges?.pipe(
-			tap(() => {
-				console.log('Form Element changed');
-			}),
-			takeUntil(this.destroy$)
-		).subscribe();
-		*/
 	}
+
+	ngOnChanges(_: SimpleChanges) {
+    	// Map tooltip options:
+    	const merged = this.getMergedTooltipOptions();
+		const key = JSON.stringify(merged);
+
+		if (key !== this.lastOptionsKey && this.refToTooltipComponent) {
+			this.mergedOptions = merged;
+			this.lastOptionsKey = key;
+			this.refToTooltipComponent.setInput('options', this.mergedOptions);
+		}	
+    }
 
 	/** Public User-Methods **/
 
@@ -194,7 +195,7 @@ export class ErrorTooltipDirective implements OnInit, OnDestroy {
 			parentDirective.ngSubmit
 				.pipe(
 					tap(() => {
-						const formHasErrors = !!this.ngControl.errors;
+						const formHasErrors = !!this.ngControl?.errors;
 						if (formHasErrors) {
 							this.displayTooltip();
 						}
@@ -225,18 +226,19 @@ export class ErrorTooltipDirective implements OnInit, OnDestroy {
 	private setupTooltipComponent(): void {
     	// Create the component using the ViewContainerRef.
     	// This way the component is automatically added to the change detection cycle of the Angular application
-    	this.refToTooltipComponent = this.viewContainerRef.createComponent(NgErrorTooltipComponent, { injector: this.injector });
-    	this.tooltipComponent = this.refToTooltipComponent.instance;
+    	const ref = this.viewContainerRef.createComponent(NgErrorTooltipComponent, { injector: this.injector });
+		this.refToTooltipComponent = ref;
+    	this.tooltipComponent = ref.instance;
 
-		// Set the data property of the component instance.
-		this.tooltipComponent.errors = this.getErrorMessages();
-		this.tooltipComponent.options = this.mergedOptions;
-		this.tooltipComponent.formControl = this.formControlRef.nativeElement;
+		// Set the data property of the component instance in a way that ngOnChanges is triggered:
+		ref.setInput('errors', this.getErrorMessages());
+		ref.setInput('options', this.mergedOptions);
+		ref.setInput('formControl', this.formControlRef.nativeElement);
 
 		this.attachListeners(this.tooltipComponent, this.formControlRef);
 
     	// Get the DOM element from the component's view.
-    	const domElemTooltip = (this.refToTooltipComponent.location.nativeElement as HTMLElement);
+    	const domElemTooltip = (ref.location.nativeElement as HTMLElement);
 
     	// Append the DOM element to the document body.
     	document.body.appendChild(domElemTooltip);
@@ -244,11 +246,7 @@ export class ErrorTooltipDirective implements OnInit, OnDestroy {
 
 	private destroyTooltip(): void {
 		this.tooltipDestroyed$?.next();
-
-		if(this.refToTooltipComponent) {
-			this.appRef.detachView(this.refToTooltipComponent.hostView);
-			this.refToTooltipComponent.destroy();
-		}
+		this.refToTooltipComponent?.destroy();
 		this.isTooltipCreated = false;
 		this.tooltipComponent = undefined;
 		this.refToTooltipComponent = undefined;
@@ -259,7 +257,7 @@ export class ErrorTooltipDirective implements OnInit, OnDestroy {
 	}
 
 	private getErrorMessages(): string[] {
-		const errors = Object.entries(this.ngControl.errors ?? {}).flatMap(([, err]) =>
+		const errors = Object.entries(this.ngControl?.errors ?? {}).flatMap(([, err]) =>
 		  Array.isArray(err) ? err.map((e: any) => e.text) : (typeof err === 'string' ? [err] : [])
 		);
 

@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { NgErrorTooltipComponent } from './ng-error-tooltip.component';
 import { defaultOptions } from './default-options.const';
+import { provideZonelessChangeDetection } from '@angular/core';
 
 describe('NgErrorTooltipsComponent', () => {
   let component: NgErrorTooltipComponent;
@@ -9,7 +10,8 @@ describe('NgErrorTooltipsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [NgErrorTooltipComponent]
+      imports: [NgErrorTooltipComponent],
+      providers: [provideZonelessChangeDetection()]
     })
     .compileComponents();
 

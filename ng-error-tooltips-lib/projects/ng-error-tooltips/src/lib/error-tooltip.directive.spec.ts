@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Component, DebugElement } from '@angular/core';
+import { Component, DebugElement, provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ControlContainer, FormGroupDirective, NgControl, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
@@ -24,6 +24,7 @@ describe('ErrorTooltipDirective', () => {
 		  declarations: [TestHostComponent],
 		  imports: [ErrorTooltipDirective, NgErrorTooltipComponent, ReactiveFormsModule],  // Notice the inclusion of ErrorTooltipComponent here
 		  providers: [
+				provideZonelessChangeDetection(),
 				{ provide: NgControl, useValue: { control: { errors: null, touched: false } } },
 				FormGroupDirective,
 				ControlContainer

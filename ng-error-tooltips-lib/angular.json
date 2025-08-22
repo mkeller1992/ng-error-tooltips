@@ -27,10 +27,7 @@
           "builder": "@nrwl/jest:jest",
           "options": {
             "configPath": "../../jest.config.ts",
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ]
+            "polyfills": []
           }
         }
       }

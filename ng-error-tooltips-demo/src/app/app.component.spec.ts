@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { ErrorTooltipDirective, MockErrorTooltipDirective } from '@ng-error-tooltips';
 import { FormBuilder } from '@angular/forms';
+import { provideZonelessChangeDetection } from '@angular/core';
 
 describe('AppComponent', () => {
   let component: AppComponent;
@@ -11,7 +12,10 @@ describe('AppComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [AppComponent],
-      providers: [FormBuilder]
+      providers: [
+        FormBuilder,
+        provideZonelessChangeDetection(),
+      ]
     })
     .overrideComponent(AppComponent, {
       remove: {

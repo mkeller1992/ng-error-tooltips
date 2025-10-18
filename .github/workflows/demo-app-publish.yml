@@ -42,7 +42,7 @@ jobs:
 
       - name: Build and link ng-error-tooltips
         run: |
-          (cd ./${{ env.LIB_FOLDER_NAME }} && npm install && npm run build && npm link)
+          (cd ./${{ env.LIB_FOLDER_NAME }} && npm ci --foreground-scripts && npm run build && npm link)
           (cd ./${{ env.DEMO_APP_FOLDER_NAME }} && npm link ${{ env.LIB_NAME }})
 
       - name: Install Dependencies

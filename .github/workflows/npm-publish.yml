@@ -17,9 +17,6 @@ jobs:
     env:
       BASE_DIR: ./ng-error-tooltips-lib
       PROJECT_NAME: ng-error-tooltips
-      # 1.) Register TOKEN on npm-website: Access Tokens > Generate New Token > Classic Token > Automation
-      # 2.) Store it on GitHub-website: repository > Settings > Secrets and variables > New repository secret
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
     steps:
       # Checkout the repository to the runner
@@ -60,12 +57,13 @@ jobs:
         run: npm run test:ci
         working-directory: ${{ env.BASE_DIR }}
 
-      # Report test coverage (for badge on npm-library-mainpage)
-      - name: Upload coverage reports to Codecov
+      # Upload coverage to Codecov (tokenless with OIDC + Codecov App)
+      - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
-          token: ${{ env.CODECOV_TOKEN }}
-          slug: mkeller1992/ng-error-tooltips
+          use_oidc: true
+          files: ${{ env.BASE_DIR }}/coverage/lcov.info  # point directly to LCOV file for faster uploads
+          disable_search: true                           # skip auto-discovery to avoid noisy gcov/python warnings
 
       # Build the library from the specified subdirectory
       - name: Build Library
@@ -108,5 +106,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "v${{ env.CURRENT_VERSION }}-lib" -m "ng-error-tooltips v${{ env.CURRENT_VERSION }}"
           git push origin "v${{ env.CURRENT_VERSION }}-lib"
+
 
 

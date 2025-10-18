@@ -32,7 +32,6 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: '24.x'
-          registry-url: 'https://registry.npmjs.org'
 
       # Ensure a recent npm that supports Trusted Publishing + provenance
       - name: Ensure recent npm
@@ -109,4 +108,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "v${{ env.CURRENT_VERSION }}-lib" -m "ng-error-tooltips v${{ env.CURRENT_VERSION }}"
           git push origin "v${{ env.CURRENT_VERSION }}-lib"
+
 

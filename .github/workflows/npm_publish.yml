@@ -51,6 +51,8 @@ jobs:
         run: npm ci
         working-directory: ${{ env.BASE_DIR }}
         env:
+          npm_config_foreground_scripts: 'true'
+          NX_SKIP_NATIVE_BINARY_DOWNLOAD: 'true'
           NX_NATIVE: 'false'
           NX_DAEMON: 'false'
 

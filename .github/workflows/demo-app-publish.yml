@@ -91,7 +91,7 @@ jobs:
         
       - name: Deploy to GitHub Pages
         if: env.deploy_needed == 'true'
-        uses: JamesIves/github-pages-deploy-action@v4.5.0
+        uses: JamesIves/github-pages-deploy-action@v4.7.3
         with:
           branch: gh-pages
           folder: ${{ env.DEMO_APP_FOLDER_NAME }}/dist/${{ env.DEMO_PROJECT_NAME }}/browser

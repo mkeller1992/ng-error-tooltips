@@ -18,6 +18,7 @@ module.exports = {
       '<rootDir>/projects/ng-error-tooltips/src/**/*.{ts,js}',
       '!<rootDir>/projects/ng-error-tooltips/src/public-api.ts',
       '!<rootDir>/projects/ng-error-tooltips/src/lib/mocks/*.ts', // Exclude mocks
+	  '!<rootDir>/projects/ng-error-tooltips/src/lib/placement.type.ts', // Exclude simple type definition
       '!<rootDir>/projects/ng-error-tooltips/src/**/*.spec.ts', // Exclude test files
     ],
     coverageReporters: ['html', 'text', 'text-summary', 'lcov'],

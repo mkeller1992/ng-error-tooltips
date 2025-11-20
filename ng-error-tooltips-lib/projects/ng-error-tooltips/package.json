@@ -17,7 +17,7 @@
     "ngx",
     "tooltip",
     "error-tooltip",
-    "reactive form"
+    "reactive forms"
   ],
   "license": "MIT",
   "bugs": {

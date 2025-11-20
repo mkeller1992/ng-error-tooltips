@@ -40,7 +40,7 @@ import { ErrorTooltipDirective } from '@ng-error-tooltips';
 Define a reactive form with validators in your TypeScript component. You can also use validators from the `CustomValidators` class, which is part of the current library:
 
 ```ts
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ErrorTooltipDirective, CustomValidators } from '@ng-error-tooltips';
 
@@ -52,15 +52,16 @@ import { ErrorTooltipDirective, CustomValidators } from '@ng-error-tooltips';
 })
 export class AppComponent {
 
-  formGroup: FormGroup;
+  private readonly formBuilder = inject(FormBuilder);
 
-  constructor(private formBuilder: FormBuilder) {
-    
-    this.formGroup = this.formBuilder.group({
-      nameInput: new FormControl<string>('', { validators: [ CustomValidators.required(), 
-                                                             CustomValidators.minLength(3) ] }),
-    });
-  }
+  formGroup: FormGroup = this.formBuilder.group({
+    nameInput: new FormControl<string>('', {
+      validators: [
+        CustomValidators.required(),
+        CustomValidators.minLength(3),
+      ],
+    }),
+  });
 }
 ```
 

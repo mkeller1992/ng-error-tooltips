@@ -20,13 +20,13 @@ export class AppComponent implements OnInit {
 		
 	ngOnInit(): void {
 		this.formGroup = this.formBuilder.group({
-		nameInput: new FormControl<string>('', { validators: [ CustomValidators.required(),
-																CustomValidators.minLength(3),
-																CustomValidators.lettersOnly(),
-																CustomValidators.maxLength(10)]}),
-		ageInput: new FormControl<string>('', { validators: [ CustomValidators.required(),
-																CustomValidators.minValue(10),
-																CustomValidators.maxValue(100)] }),
+			nameInput: new FormControl<string>('', { validators: [ CustomValidators.required(),
+																	CustomValidators.minLength(3),
+																	CustomValidators.lettersOnly(),
+																	CustomValidators.maxLength(10)]}),
+			ageInput: new FormControl<string>('', { validators: [ CustomValidators.required(),
+																	CustomValidators.minValue(10),
+																	CustomValidators.maxValue(100)] }),
 		});
 	}
 

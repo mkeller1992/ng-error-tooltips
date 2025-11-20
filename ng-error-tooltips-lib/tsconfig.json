@@ -3,23 +3,20 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "outDir": "./dist/out-tsc",
+	"baseUrl": "./",
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
-    "noImplicitReturns": true,
+	"noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "paths": {
-      "@ng-error-tooltips": [
-        "../ng-error-tooltips-lib/dist/ng-error-tooltips"
-      ]
-    },
-    "skipLibCheck": true,
-    "isolatedModules": true,
+	"skipLibCheck": true,
+	"isolatedModules": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
-    "moduleResolution": "bundler",
+	"forceConsistentCasingInFileNames": true,
+	"useDefineForClassFields": false,
     "importHelpers": true,
+	"moduleResolution": "bundler",
     "target": "ES2022",
     "module": "ES2022"
   },

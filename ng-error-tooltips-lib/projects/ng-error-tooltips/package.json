@@ -5,7 +5,7 @@
   "homepage": "https://mkeller1992.github.io/ng-error-tooltips",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mkeller1992/ng-error-tooltips"
+    "url": "git+https://github.com/mkeller1992/ng-error-tooltips.git"
   },
   "author": {
     "name": "Matthias Keller"

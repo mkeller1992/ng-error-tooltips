@@ -23,9 +23,11 @@
     "target": "ES2022",
     "module": "preserve",
     "paths": {
-      "@ng-error-tooltips": [
-        "../ng-error-tooltips-lib/projects/ng-error-tooltips/src/public-api.ts"
-      ]
+		// This path targets public-api.ts so the demo app and its Jest tests run
+		// against the live library source without requiring a built dist/ bundle of the library:
+		"@ng-error-tooltips": [
+			"../ng-error-tooltips-lib/projects/ng-error-tooltips/src/public-api.ts"
+		]
     }
   },
   "angularCompilerOptions": {

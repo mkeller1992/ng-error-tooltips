@@ -1,6 +1,6 @@
 import { Directive, Input } from "@angular/core";
-import { Placement } from "../placement.type";
-import { ErrorTooltipOptions } from "../error-tooltip-options.interface";
+import { Placement } from "../tooltip/placement.type";
+import { ErrorTooltipOptions } from "../options/error-tooltip-options.interface";
 
 @Directive({
     selector: '[ngErrorTooltip]',

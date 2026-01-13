@@ -1,7 +1,9 @@
 import { Component, computed, ElementRef, HostBinding, inject, Input, OnChanges, OnInit, signal, SimpleChanges } from '@angular/core';
 import { Subject } from 'rxjs';
-import { defaultOptions } from './default-options.const';
-import { ErrorTooltipOptions } from './error-tooltip-options.interface';
+import { ERROR_TOOLTIP_LANG } from '../error-tooltip-lang.token';
+import { defaultOptions } from '../options/default-options.const';
+import { ErrorTooltipOptions } from '../options/error-tooltip-options.interface';
+import { ErrorPayload } from '../error-payload.type';
 import { Placement } from './placement.type';
 
 @Component({
@@ -10,18 +12,25 @@ import { Placement } from './placement.type';
 	styleUrls: ['./ng-error-tooltip.component.scss']
 })
 export class NgErrorTooltipComponent implements OnInit, OnChanges {
-  	private readonly elementRef = inject(ElementRef);
+  	private readonly langSig = inject(ERROR_TOOLTIP_LANG);
+	private readonly elementRef = inject(ElementRef);
 
   	/* Inputs will be passed by error-tooltip-directive */
 
 	@Input({ required: true })
-	errors: string[] = [];
+	errors: ErrorPayload[] = [];
 
 	@Input({ required: true })
 	options!: ErrorTooltipOptions;
 
 	@Input({ required: true })
 	formControl!: any;
+
+
+	readonly translatedErrors = computed(() => {
+		const lang = this.langSig();
+		return this.errors.map(e => typeof e === 'string' ? e : e[lang]);
+	});
 
   
 	// Informs error-tooltip-directive when user clicked on tooltip:

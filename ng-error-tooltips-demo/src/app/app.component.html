@@ -1,40 +1,74 @@
+@if (formGroup) {
+	<div class="container mt-5">
+			<form [formGroup]="formGroup" (ngSubmit)="submit()">
 
-@if (formGroup) 
-{
-  <div class="container mt-5">
-    <form [formGroup]="formGroup" (ngSubmit)="submit()">
-  
-      <h4 class="mb-3">
-        Sample Form
-      </h4>
+			<div class="d-flex align-items-center justify-content-between mb-3">
+				<h4 class="mb-0">Sample Form (i18n)</h4>
 
-      <p>
-        Click "Submit" without entering any values to see the error tooltips.<br>
-        Insert a single digit number in the "name"-field to see an error-tooltip with multiple error messages.
-      </p>
-  
-      <div class="mb-3">
-        <input
-          formControlName="nameInput"
-          ngErrorTooltip [placement]="'right'"
-          class="form-control mb-4"
-          placeholder="Enter your name*"
-          type="text">
-  
-        <input
-          formControlName="ageInput"
-          ngErrorTooltip [options]="tooltipOptions"
-          class="form-control"
-          placeholder="Enter your age*"
-          type="number">
-      </div>
-    
-      <button 
-        class="btn btn-primary mt-3"
-        type="submit">
-        Submit
-      </button>
-    
-    </form>
-  </div>
+				<div class="d-flex align-items-center gap-2">
+					<label class="mb-0" for="langSelect">Language</label>
+
+					<select
+						id="langSelect"
+						class="form-select"
+						style="width: 160px"
+						[value]="lang()"
+						(change)="onLangChange(($any($event.target).value))">
+
+						@for (l of languages; track l.code) {
+						<option [value]="l.code">{{ l.label }}</option>
+						}
+					</select>
+				</div>
+			</div>
+
+			<p>
+				Click «Submit» without entering any values to see error tooltips.<br>
+				Change the language via the dropdown to see the tooltips update live.<br>
+				The «Employee ID» field demonstrates a regex validator where the app provides the
+				tri-language message object.
+			</p>
+
+			<div class="mb-3">
+				<input
+					formControlName="nameInput"
+					ngErrorTooltip
+					[placement]="'right'"
+					class="form-control mb-3"
+					placeholder="Enter your name*"
+					type="text">
+
+				<input
+					formControlName="ageInput"
+					ngErrorTooltip
+					[options]="tooltipOptions"
+					class="form-control mb-3"
+					placeholder="Enter your age*"
+					type="number">
+
+				<input
+					formControlName="employeeIdInput"
+					ngErrorTooltip
+					[placement]="'right'"
+					class="form-control"
+					placeholder="Employee ID (e.g. EMP-1234)*"
+					type="text">
+
+				<hr class="my-4">
+
+				<input
+					formControlName="legacyNameInput"
+					ngErrorTooltip
+					[placement]="'right'"
+					class="form-control"
+					placeholder="Legacy field (always DE)*"
+					type="text">
+			</div>
+
+			<button class="btn btn-primary mt-3" type="submit">
+				Submit
+			</button>
+
+		</form>
+	</div>
 }

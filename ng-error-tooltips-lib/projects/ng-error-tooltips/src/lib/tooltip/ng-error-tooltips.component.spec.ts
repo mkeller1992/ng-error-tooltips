@@ -1,8 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgErrorTooltipComponent } from './ng-error-tooltip.component';
-import { defaultOptions } from './default-options.const';
 import { ElementRef, provideZonelessChangeDetection } from '@angular/core';
 import { firstValueFrom, take } from 'rxjs';
+import { defaultOptions } from '../options/default-options.const';
 
 describe('NgErrorTooltipComponent', () => {
   let component: NgErrorTooltipComponent;

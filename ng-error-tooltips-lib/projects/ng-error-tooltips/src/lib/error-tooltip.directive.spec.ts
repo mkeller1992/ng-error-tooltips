@@ -5,9 +5,9 @@ import { ControlContainer, NgControl, ReactiveFormsModule } from '@angular/forms
 import { By } from '@angular/platform-browser';
 import { Subject } from 'rxjs';
 import { ErrorTooltipDirective } from './error-tooltip.directive';
-import { NgErrorTooltipComponent } from './ng-error-tooltip.component';
-import { defaultOptions } from './default-options.const';
-import type { ErrorTooltipOptions } from './error-tooltip-options.interface';
+import { defaultOptions } from './options/default-options.const';
+import { ErrorTooltipOptions } from './options/error-tooltip-options.interface';
+import { NgErrorTooltipComponent } from './tooltip/ng-error-tooltip.component';
 
 @Component({
 	standalone: false,
@@ -93,7 +93,7 @@ describe('ErrorTooltipDirective', () => {
 		(directive as any).mergedOptions = { ...defaultOptions };
 
 		// Mock error messages so the tooltip is shown
-		jest.spyOn(directive as any, 'getErrorMessages').mockReturnValue(['E1']);
+		jest.spyOn(directive as any, 'getErrorPayloads').mockReturnValue(['E1']);
 
 		// Provide a fake host element
 		(directive as any).formControlRef = { nativeElement: document.createElement('input') };
@@ -130,7 +130,7 @@ describe('ErrorTooltipDirective', () => {
 	it('should call displayTooltip when errors exist', () => {
 		const directive = getDirectiveInstance();
 		const spy = jest.spyOn(directive as any, 'displayTooltip').mockImplementation(() => {});
-		jest.spyOn(directive as any, 'getErrorMessages').mockReturnValue(['Error']);
+		jest.spyOn(directive as any, 'getErrorPayloads').mockReturnValue(['Error']);
 		directive.showErrorTooltip();
 		expect(spy).toHaveBeenCalledTimes(1);
 	});
@@ -138,7 +138,7 @@ describe('ErrorTooltipDirective', () => {
 	it('should NOT call displayTooltip when no errors exist', () => {
 		const directive = getDirectiveInstance();
 		const spy = jest.spyOn(directive as any, 'displayTooltip').mockImplementation(() => {});
-		jest.spyOn(directive as any, 'getErrorMessages').mockReturnValue([]);
+		jest.spyOn(directive as any, 'getErrorPayloads').mockReturnValue([]);
 		directive.showErrorTooltip();
 		expect(spy).not.toHaveBeenCalled();
 	});
@@ -151,7 +151,7 @@ describe('ErrorTooltipDirective', () => {
 		const directive = getDirectiveInstance();
 		(directive as any).mergedOptions = { ...defaultOptions, showFirstErrorOnly: false };
 		(directive as any).ngControl = { errors: { arr: [{ text: 'E1' }, { text: 'E2' }], str: 'E3', num: 123 } };
-		const messages = (directive as any).getErrorMessages();
+		const messages = (directive as any).getErrorPayloads();
 		expect(messages).toEqual(['E1', 'E2', 'E3']);
 	});
 
@@ -159,8 +159,36 @@ describe('ErrorTooltipDirective', () => {
 		const directive = getDirectiveInstance();
 		(directive as any).mergedOptions = { ...defaultOptions, showFirstErrorOnly: true };
 		(directive as any).ngControl = { errors: { arr: [{ text: 'E1' }, { text: 'E2' }], str: 'E3' } };
-		const messages = (directive as any).getErrorMessages();
+		const messages = (directive as any).getErrorPayloads();
 		expect(messages).toEqual(['E1']);
+	});
+
+	it('should include TriLangText errors (and not filter them out)', () => {
+		const directive = getDirectiveInstance();
+		(directive as any).mergedOptions = { ...defaultOptions, showFirstErrorOnly: false };
+
+		const tri = { de: 'DE', fr: 'FR', en: 'EN' };
+
+		(directive as any).ngControl = {
+			errors: {
+				// direct error value as TriLangText
+				required: tri,
+
+				// legacy passwordErrors shape: [{ text: ... }]
+				passwordErrors: [{ text: tri }],
+
+				// plus a normal string error
+				foo: 'E1',
+
+				// ignored (should not appear)
+				num: 123,
+				obj: { any: 'thing' }
+			}
+		};
+
+		const payloads = (directive as any).getErrorPayloads();
+
+		expect(payloads).toEqual([tri, tri, 'E1']);
 	});
 
 	/* -------------------------------------------------------------------

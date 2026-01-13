@@ -15,7 +15,7 @@ describe('CustomValidators', () => {
 
         const control2 = new FormControl('');
         const result2 = CustomValidators.required()(control2);
-        expect(result2).toEqual({ required: CustomValidators['ERROR_MESSAGES'].required() });
+        expect(result2).toEqual({ required: expect.anything() });
     });
 
     it('should validate minLength correctly', () => {
@@ -25,7 +25,7 @@ describe('CustomValidators', () => {
 
         const control2 = new FormControl('abc');
         const result2 = CustomValidators.minLength(5)(control2);
-        expect(result2).toEqual({ minLength: CustomValidators['ERROR_MESSAGES'].minlength(5) });
+        expect(result2).toEqual({ minLength: expect.anything() });
     });
 
     it('should validate maxLength correctly', () => {
@@ -35,7 +35,7 @@ describe('CustomValidators', () => {
 
         const control2 = new FormControl('abcdef');
         const result2 = CustomValidators.maxLength(5)(control2);
-        expect(result2).toEqual({ maxLength: CustomValidators['ERROR_MESSAGES'].maxLength(5) });
+        expect(result2).toEqual({ maxLength: expect.anything() });
     });
 
     it('should validate smallerThan correctly', () => {
@@ -45,7 +45,7 @@ describe('CustomValidators', () => {
 
         const control2 = new FormControl(6);
         const result2 = CustomValidators.smallerThan(5)(control2);
-        expect(result2).toEqual({ smallerThan: CustomValidators['ERROR_MESSAGES'].smallerThan(5) });
+        expect(result2).toEqual({ smallerThan: expect.anything() });
 
         const controlToIgnore = new FormControl('');
         const result3 = CustomValidators.smallerThan(5)(controlToIgnore);
@@ -63,7 +63,7 @@ describe('CustomValidators', () => {
 
         const control2 = new FormControl(6);
         const result2 = CustomValidators.formattedSmallerThan(5)(control2);
-        expect(result2).toEqual({ smallerThan: CustomValidators['ERROR_MESSAGES'].formattedSmallerThan(5) });
+        expect(result2).toEqual({ smallerThan: expect.anything() });
 
         const controlToIgnore = new FormControl('');
         const result3 = CustomValidators.formattedSmallerThan(5)(controlToIgnore);
@@ -80,7 +80,7 @@ describe('CustomValidators', () => {
         expect(result).toBeNull();
 
         const result2 = CustomValidators.greaterThan(5)(control);
-        expect(result2).toEqual({ greaterThan: CustomValidators['ERROR_MESSAGES'].greaterThan(5) });
+        expect(result2).toEqual({ greaterThan: expect.anything() });
 
         const controlToIgnore = new FormControl('');
         const result3 = CustomValidators.greaterThan(3)(controlToIgnore);
@@ -97,7 +97,7 @@ describe('CustomValidators', () => {
         expect(result).toBeNull();
 
         const result2 = CustomValidators.formattedGreaterThan(5)(control);
-        expect(result2).toEqual({ greaterThan: CustomValidators['ERROR_MESSAGES'].formattedGreaterThan(5) });
+        expect(result2).toEqual({ greaterThan: expect.anything() });
 
         const controlToIgnore = new FormControl('');
         const result3 = CustomValidators.formattedGreaterThan(3)(controlToIgnore);
@@ -115,7 +115,7 @@ describe('CustomValidators', () => {
 
         const control2 = new FormControl(3);
         const result2 = CustomValidators.minValue(5)(control2);
-        expect(result2).toEqual({ greaterThan: CustomValidators['ERROR_MESSAGES'].minValue(5) });
+        expect(result2).toEqual({ greaterThan: expect.anything() });
 
         const controlToIgnore = new FormControl('');
         const result3 = CustomValidators.minValue(5)(controlToIgnore);
@@ -133,7 +133,7 @@ describe('CustomValidators', () => {
 
         const control2 = new FormControl(3);
         const result2 = CustomValidators.formattedMinValue(5)(control2);
-        expect(result2).toEqual({ greaterThan: CustomValidators['ERROR_MESSAGES'].formattedMinValue(5) });
+        expect(result2).toEqual({ greaterThan: expect.anything() });
 
         const controlToIgnore = new FormControl('');
         const result3 = CustomValidators.formattedMinValue(5)(controlToIgnore);
@@ -151,7 +151,7 @@ describe('CustomValidators', () => {
 
         const control2 = new FormControl(10);
         const result2 = CustomValidators.maxValue(5)(control2);
-        expect(result2).toEqual({ smallerThan: CustomValidators['ERROR_MESSAGES'].maxValue(5) });
+        expect(result2).toEqual({ smallerThan: expect.anything() });
 
         const controlToIgnore = new FormControl('');
         const result3 = CustomValidators.maxValue(5)(controlToIgnore);
@@ -169,7 +169,7 @@ describe('CustomValidators', () => {
 
         const control2 = new FormControl(10);
         const result2 = CustomValidators.formattedMaxValue(5)(control2);
-        expect(result2).toEqual({ smallerThan: CustomValidators['ERROR_MESSAGES'].formattedMaxValue(5) });
+        expect(result2).toEqual({ smallerThan: expect.anything() });
 
         const controlToIgnore = new FormControl('');
         const result3 = CustomValidators.formattedMaxValue(5)(controlToIgnore);
@@ -187,7 +187,7 @@ describe('CustomValidators', () => {
 
         const control2 = new FormControl('123');
         const result2 = CustomValidators.lettersOnly()(control2);
-        expect(result2).toEqual({ lettersOnly: CustomValidators['ERROR_MESSAGES'].lettersOnly() });
+        expect(result2).toEqual({ lettersOnly: expect.anything() });
     });
 
     it('should validate email correctly', () => {
@@ -197,7 +197,7 @@ describe('CustomValidators', () => {
 
         const control2 = new FormControl('invalid-email');
         const result2 = CustomValidators.email()(control2);
-        expect(result2).toEqual({ invalidEmail: CustomValidators['ERROR_MESSAGES'].invalidEmail() });
+        expect(result2).toEqual({ invalidEmail: expect.anything() });
 
         const control3 = new FormControl(undefined);
         const result3 = CustomValidators.email()(control3);

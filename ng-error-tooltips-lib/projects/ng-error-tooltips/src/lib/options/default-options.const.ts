@@ -1,5 +1,6 @@
 import { ErrorTooltipOptions } from "./error-tooltip-options.interface";
 
+
 export const defaultOptions: ErrorTooltipOptions = {
 	id: 0,
 	placement: 'bottom-left',

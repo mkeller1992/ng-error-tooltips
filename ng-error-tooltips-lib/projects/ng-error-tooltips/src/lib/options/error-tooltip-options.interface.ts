@@ -1,4 +1,5 @@
-import { Placement } from './placement.type';
+import { Placement } from "../tooltip/placement.type";
+
 
 export interface ErrorTooltipOptions {
     id?: string | number;

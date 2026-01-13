@@ -1,0 +1,13 @@
+
+<div class="tooltip-arrow"></div>
+
+<div class="tooltip-label" (click)="handleTooltipClick()">
+	@if (translatedErrors().length > 1) {
+		<ul class="tooltip-error-list">
+			@for (err of translatedErrors(); track err) { <li>{{ err }}</li> }
+		</ul>
+	}
+	@else if (translatedErrors().length === 1) {
+		{{ translatedErrors()[0] }}
+	}
+</div>

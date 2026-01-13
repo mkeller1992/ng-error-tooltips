@@ -1,11 +1,17 @@
-import { ApplicationConfig, provideZoneChangeDetection, provideZonelessChangeDetection } from '@angular/core';
+import { ApplicationConfig, provideZonelessChangeDetection, signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
+import type { SupportedLanguage } from '@ng-error-tooltips';
+import { provideErrorTooltips } from '@ng-error-tooltips';
 
 import { routes } from './app.routes';
+
+// Demo-language signal (in real apps: inject(LanguageService).currentLanguageCode)
+export const demoLang = signal<SupportedLanguage>('de');
 
 export const appConfig: ApplicationConfig = {
     providers: [
     	provideRouter(routes),
-		provideZonelessChangeDetection()
+		provideZonelessChangeDetection(),
+		provideErrorTooltips({ lang: demoLang }),
 	]
 };

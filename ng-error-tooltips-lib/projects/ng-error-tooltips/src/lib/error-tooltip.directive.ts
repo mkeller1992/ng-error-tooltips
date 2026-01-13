@@ -1,11 +1,13 @@
-import { ApplicationRef, ComponentRef, Directive, ElementRef, inject, Injector, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewContainerRef } from '@angular/core';
+import { ComponentRef, Directive, ElementRef, EnvironmentInjector, inject, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewContainerRef } from '@angular/core';
 import { ControlContainer, FormGroupDirective, NgControl } from '@angular/forms';
 
 import { Subject, filter, fromEvent, interval, merge, race, takeUntil, tap } from 'rxjs';
-import { defaultOptions } from './default-options.const';
-import { ErrorTooltipOptions } from './error-tooltip-options.interface';
-import { Placement } from './placement.type';
-import { NgErrorTooltipComponent } from './ng-error-tooltip.component';
+import { Placement } from './tooltip/placement.type';
+import { ErrorPayload } from './error-payload.type';
+import { isTriLangText } from './validators/error-messages.const';
+import { defaultOptions } from './options/default-options.const';
+import { ErrorTooltipOptions } from './options/error-tooltip-options.interface';
+import { NgErrorTooltipComponent } from './tooltip/ng-error-tooltip.component';
 
 
 @Directive({
@@ -15,7 +17,7 @@ import { NgErrorTooltipComponent } from './ng-error-tooltip.component';
 export class ErrorTooltipDirective implements OnInit, OnDestroy, OnChanges {
 	private readonly formControlRef = inject<ElementRef<HTMLElement>>(ElementRef);
 	private readonly viewContainerRef = inject(ViewContainerRef);
-	private readonly injector = inject(Injector);
+	private readonly injector = inject(EnvironmentInjector);
 	private readonly controlContainer = inject(ControlContainer);
 	private readonly ngControl= inject(NgControl, { self: true, optional: true });
 
@@ -118,7 +120,7 @@ export class ErrorTooltipDirective implements OnInit, OnDestroy, OnChanges {
 	/** Public User-Methods **/
 
 	public showErrorTooltip() {
-		if (this.getErrorMessages().length > 0) {
+		if (this.getErrorPayloads().length > 0) {
 			this.displayTooltip();
 		}
 	}
@@ -231,7 +233,7 @@ export class ErrorTooltipDirective implements OnInit, OnDestroy, OnChanges {
     	this.tooltipComponent = ref.instance;
 
 		// Set the data property of the component instance in a way that ngOnChanges is triggered:
-		ref.setInput('errors', this.getErrorMessages());
+		ref.setInput('errors', this.getErrorPayloads());
 		ref.setInput('options', this.mergedOptions);
 		ref.setInput('formControl', this.formControlRef.nativeElement);
 
@@ -256,13 +258,31 @@ export class ErrorTooltipDirective implements OnInit, OnDestroy, OnChanges {
 		return this.formControlRef.nativeElement.getBoundingClientRect();
 	}
 
-	private getErrorMessages(): string[] {
-		const errors = Object.entries(this.ngControl?.errors ?? {}).flatMap(([, err]) =>
-		  Array.isArray(err) ? err.map((e: any) => e.text) : (typeof err === 'string' ? [err] : [])
-		);
+	private getErrorPayloads(): ErrorPayload[] {
+		const entries = Object.entries(this.ngControl?.errors ?? {}) as Array<[string, unknown]>;
+
+		const errors = entries.reduce<ErrorPayload[]>((acc, [, err]) => {
+			
+			// for passwordErrors: [{ text: string | TriLangText }]
+			if (Array.isArray(err)) {
+				for (const e of err as any[]) {
+					const t = e?.text;
+					if (typeof t === 'string' || isTriLangText(t)) {
+						acc.push(t);
+					}
+				}
+				return acc;
+			}
+
+			if (typeof err === 'string' || isTriLangText(err)) {
+				acc.push(err as ErrorPayload);
+			}
+
+			return acc;
+		}, []);
 
 		return this.mergedOptions.showFirstErrorOnly && errors.length > 1 ? [errors[0]] : errors;
-	  }
+	}
 
 	ngOnDestroy(): void {
 		this.destroyTooltip();

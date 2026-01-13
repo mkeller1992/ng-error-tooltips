@@ -6,11 +6,13 @@
 
 An Angular library for reactive forms that displays tooltips on form inputs with errors, providing a user-friendly way to visualize validation messages.
 
-The latest library version is compatible with **Angular 21**.
-Starting with version 20.1.0, `ng-error-tooltips` is fully **zoneless-compatible**. 
+The latest library version is compatible with **Angular 21**.  
+Starting with version **20.1.0**, `ng-error-tooltips` is fully **zoneless-compatible**.
 
+---
 
 ## Demo
+
 https://mkeller1992.github.io/ng-error-tooltips/
 
 ---
@@ -18,26 +20,38 @@ https://mkeller1992.github.io/ng-error-tooltips/
 ## Install
 
 To install the library, enter the following command in your console:
-```
+
+```bash
 npm i ng-error-tooltips
 ```
 
+---
+
 ## Setup
-### For apps based on `Standalone Components`
-Import ErrorTooltipDirective directly in your component:
+
+### For apps based on standalone components
+
+Import `ErrorTooltipDirective` directly in your component:
+
 ```ts
 import { ErrorTooltipDirective } from '@ng-error-tooltips';
 
 @Component({
-    selector: 'app-root',
-    templateUrl: './app.component.html',
-    styleUrls: ['./app.component.scss'],
-    imports: [ErrorTooltipDirective]
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss'],
+  imports: [ErrorTooltipDirective]
 })
+export class AppComponent {}
 ```
 
+---
+
 ## Usage
-Define a reactive form with validators in your TypeScript component. You can also use validators from the `CustomValidators` class, which is part of the current library:
+
+Define a reactive form with validators in your TypeScript component.  
+You can use validators from the `CustomValidators` class, which is part of this library.  
+For applications with language switching support, use the `CustomValidatorsI18n` variants instead.
 
 ```ts
 import { Component, inject } from '@angular/core';
@@ -73,15 +87,17 @@ Create the corresponding form in your HTML file and add `ngErrorTooltip` to the 
   <h4>Sample Form</h4>
 
   <input
-      ngErrorTooltip
-      formControlName="nameInput"        
-      placeholder="Enter your name*"
-      type="text">
+    ngErrorTooltip
+    formControlName="nameInput"
+    placeholder="Enter your name*"
+    type="text">
 
   <button type="submit">Submit</button>
 
 </form>
 ```
+
+---
 
 ### Two ways to pass additional properties
 
@@ -89,10 +105,11 @@ You can pass separate properties, such as `placement`, as shown in the example b
 
 ```html
 <input
-    ngErrorTooltip [placement]="'right'"
-    formControlName="nameInput"        
-    placeholder="Enter your name*"
-    type="text">
+  ngErrorTooltip
+  [placement]="'right'"
+  formControlName="nameInput"
+  placeholder="Enter your name*"
+  type="text">
 ```
 
 Alternatively, you can pass one or more properties via an `ErrorTooltipOptions` object:
@@ -102,38 +119,149 @@ import { ErrorTooltipOptions } from '@ng-error-tooltips';
 
 tooltipOptions: ErrorTooltipOptions = {
   placement: 'right',
-}
+};
 ```
 
 ```html
 <input
-    formControlName="ageInput"
-    ngErrorTooltip [options]="tooltipOptions"
-    class="form-control"
-    placeholder="Enter your age*"
-    type="number">
+  formControlName="ageInput"
+  ngErrorTooltip
+  [options]="tooltipOptions"
+  class="form-control"
+  placeholder="Enter your age*"
+  type="number">
 ```
 
+---
+
+## Internationalisation (i18n)
+
+Starting with version **21.1.0**, `ng-error-tooltips` supports **reactive multi-language error messages**.
+
+The library itself is intentionally lightweight regarding translations:
+
+- No dependency on `ngx-translate` or similar libraries
+- No internal language management
+- Fully signal-based and zoneless-friendly
+
+Your application remains the single source of truth for the active language.
+
+
+
+### Default behaviour (no configuration)
+
+If you do nothing, the tooltip falls back to **German (`de`)** error messages.
+
+This guarantees **backwards compatibility** for existing applications.
+
+
+
+### Providing the active language
+
+To enable language switching, provide the current language as a  
+`Signal<'de' | 'fr' | 'en'>` using `provideErrorTooltips`.
+
+Example (standalone bootstrap):
+
+```ts
+import { bootstrapApplication, inject } from '@angular/core';
+import { provideErrorTooltips } from '@ng-error-tooltips';
+import { LanguageService } from './language.service';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideErrorTooltips({
+      lang: inject(LanguageService).currentLanguageCode
+    })
+  ]
+});
+```
+
+Whenever the language signal changes, all visible error tooltips update automatically.
+
+
+
+### Using i18n-aware validators
+
+For applications with language switching, use the `CustomValidatorsI18n` variants.
+
+```ts
+import { CustomValidatorsI18n } from '@ng-error-tooltips';
+
+formGroup = this.fb.group({
+  name: ['', [
+    CustomValidatorsI18n.requiredI18n(),
+    CustomValidatorsI18n.minLengthI18n(3)
+  ]]
+});
+```
+
+Internally, these validators return tri-language payloads:
+
+```ts
+{
+  de: 'Eingabe erforderlich',
+  fr: 'Saisie requise',
+  en: 'Input required'
+}
+```
+
+The tooltip resolves the correct language automatically.
+
+
+
+### App-specific messages (regexPattern)
+
+For domain-specific validation rules, all translations must be provided explicitly:
+
+```ts
+CustomValidatorsI18n.regexPatternI18n(
+  /^[A-Z]{3}\d{4}$/,
+  {
+    de: 'Ungültiges Format',
+    fr: 'Format invalide',
+    en: 'Invalid format'
+  }
+);
+```
+
+This is intentional, as such messages are application-specific and cannot be provided by the library.
+
+
+
+### Mixing legacy and i18n validators
+
+You can freely mix:
+
+- legacy validators (`CustomValidators.required()`)
+- i18n validators (`CustomValidatorsI18n.requiredI18n()`)
+
+The tooltip handles both transparently.
+
+---
 
 ## Properties
 
-| name                  | type                                  | default | description |
-|-----------------------|---------------------------------------|---------|-------------|
-| id                    | string \| number                      | 0       | A custom id that can be assigned to the tooltip. |
-| showFirstErrorOnly    | boolean                               | false   | Whether the tooltip should only display the first error if the form-input contains multiple errors |
-| placement             | Placement                             | 'bottom-left'   | The position of the tooltip. |
-| zIndex                | number                                | 1101    | The z-index of the tooltip. |
-| tooltipClass          | string                                | ''      | Any additional classes to be passed to the tooltip (target them with `::ng-deep`). |
-| shadow                | boolean                               | true    | If true, the tooltip will have a shadow. |
-| offset                | number                                | 8       | The offset of the tooltip relative to the item. |
-| width                 | string                                | ''      | The width of the tooltip. |
-| maxWidth              | string                                | '350px' | The maximum width of the tooltip. |
-| pointerEvents         | "auto" \| "none"                      | 'auto'  | Defines whether or not the tooltip reacts to pointer events. |
+| name | type | default | description |
+|-----|------|---------|-------------|
+| id | string \| number | 0 | A custom id that can be assigned to the tooltip |
+| showFirstErrorOnly | boolean | false | Whether the tooltip should only display the first error if multiple errors exist |
+| placement | Placement | 'bottom-left' | The position of the tooltip |
+| zIndex | number | 1101 | The z-index of the tooltip |
+| tooltipClass | string | '' | Additional CSS classes applied to the tooltip (`::ng-deep`) |
+| shadow | boolean | true | Whether the tooltip has a shadow |
+| offset | number | 8 | Offset of the tooltip relative to the element |
+| width | string | '' | Fixed width of the tooltip |
+| maxWidth | string | '350px' | Maximum width of the tooltip |
+| pointerEvents | "auto" \| "none" | 'auto' | Whether the tooltip reacts to pointer events |
+
 ---
 
+## Angular Jest unit tests
 
-### Angular Jest Unit-Tests: Mocking ErrorTooltipDirective and ValidatorService
-In the test initialization, you might need to use `.overrideComponent` to override the actual directive with the mock directive provided by the library.
+### Mocking `ErrorTooltipDirective`
+
+In unit tests, you may want to replace the real directive with the mock directive provided by the library.
 
 ```ts
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -149,20 +277,14 @@ describe('AppComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [AppComponent],
-      providers: [
-        FormBuilder
-      ]
+      providers: [FormBuilder]
     })
     .overrideComponent(AppComponent, {
       remove: {
-        imports: [
-          ErrorTooltipDirective
-        ]
+        imports: [ErrorTooltipDirective]
       },
       add: {
-        imports: [
-          MockErrorTooltipDirective
-        ]
+        imports: [MockErrorTooltipDirective]
       }
     })
     .compileComponents();
@@ -170,7 +292,6 @@ describe('AppComponent', () => {
     fixture = TestBed.createComponent(AppComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-
   });
-})
+});
 ```

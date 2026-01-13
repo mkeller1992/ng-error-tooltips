@@ -164,12 +164,11 @@ To enable language switching, provide the current language as a
 Example (standalone bootstrap):
 
 ```ts
-
-export const currentLanguageCode = signal<SupportedLanguage>(defaultLanguage);
-
 import { bootstrapApplication, inject } from '@angular/core';
 import { provideErrorTooltips } from '@ng-error-tooltips';
 import { LanguageService } from './language.service';
+
+export const currentLanguageCode = signal<SupportedLanguage>(defaultLanguage);
 
 bootstrapApplication(AppComponent, {
   providers: [

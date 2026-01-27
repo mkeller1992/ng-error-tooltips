@@ -26,6 +26,12 @@ export const ERROR_MESSAGES = {
 		en: (() => 'Input required') satisfies MsgFn0
 	},
 
+	trueRequired: {
+		de: () => 'Bitte bestätigen.',
+		en: () => 'Please confirm.',
+		fr: () => 'Veuillez confirmer.',
+	},
+
 	minLength: {
 		de: ((min: number) => `Min. Länge: ${formatNumber(min)} Zeichen`) satisfies MsgFn1,
 		fr: ((min: number) => `Longueur min. : ${formatNumber(min)} caractères`) satisfies MsgFn1,

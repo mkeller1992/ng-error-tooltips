@@ -18,6 +18,24 @@ describe('CustomValidators', () => {
         expect(result2).toEqual({ required: expect.anything() });
     });
 
+	it('should validate trueRequired correctly', () => {
+		const controlTrue = new FormControl(true);
+		const result1 = CustomValidators.trueRequired()(controlTrue);
+		expect(result1).toBeNull();
+
+		const controlFalse = new FormControl(false);
+		const result2 = CustomValidators.trueRequired()(controlFalse);
+		expect(result2).toEqual({ trueRequired: expect.anything() });
+
+		const controlNull = new FormControl(null);
+		const result3 = CustomValidators.trueRequired()(controlNull);
+		expect(result3).toEqual({ trueRequired: expect.anything() });
+
+		const controlUndefined = new FormControl(undefined);
+		const result4 = CustomValidators.trueRequired()(controlUndefined);
+		expect(result4).toEqual({ trueRequired: expect.anything() });
+	});
+
     it('should validate minLength correctly', () => {
         const control = new FormControl('abcdef');
         const result = CustomValidators.minLength(5)(control);

@@ -16,6 +16,13 @@ export class CustomValidators {
 		};
 	}
 
+	static trueRequired(errorMessage?: string): ValidatorFn {
+		return (control: AbstractControl): ValidationErrors | null => {
+			const msg = errorMessage ?? ERROR_MESSAGES.trueRequired.de();
+			return control.value === true ? null : { trueRequired: msg };
+		};
+	}
+
 	static minLength(minLength: number, errorMessage?: string): ValidatorFn {
 		return (control: AbstractControl): ValidationErrors | null => {
 			const errorMsg = errorMessage ?? ERROR_MESSAGES.minLength.de(minLength);
@@ -270,6 +277,13 @@ export class CustomValidators {
 			const isEmpty = this.isEmptyValue(control.value);
 			const msg = errorMessage ?? tri('required');
 			return isEmpty ? { required: msg } : null;
+		};
+	}
+
+	static trueRequiredI18n(errorMessage?: TriLangText): ValidatorFn {
+		return (control: AbstractControl): ValidationErrors | null => {
+			const msg = errorMessage ?? tri('trueRequired');
+			return control.value === true ? null : { trueRequired: msg };
 		};
 	}
 

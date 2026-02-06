@@ -1,23 +1,27 @@
-import { Component, OnInit, WritableSignal, inject, signal } from '@angular/core';
+import { Component, OnInit, WritableSignal, inject, signal, viewChildren } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CustomValidators, ErrorTooltipDirective, ErrorTooltipOptions, type SupportedLanguage, type TriLangText } from '@ng-error-tooltips';
+import { CustomSignalFormValidators, CustomValidators, ErrorTooltipDirective, ErrorTooltipDirectiveForSignalForms, ErrorTooltipOptions, type SupportedLanguage, type TriLangText } from '@ng-error-tooltips';
 import { demoLang } from './app.config';
+import { form, FormField } from '@angular/forms/signals';
 
-interface SignalFormSchema {
+interface Employee {
 	nameInput: string;
 	ageInput: number;
 	employeeIdInput: string;
-	legacyNameInput: string;
+	superior: string;
 }
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
-  imports: [FormsModule, ReactiveFormsModule, ErrorTooltipDirective],
+  imports: [FormsModule, ReactiveFormsModule, FormField, ErrorTooltipDirective, ErrorTooltipDirectiveForSignalForms],
 })
 export class AppComponent implements OnInit {
   	private readonly formBuilder = inject(FormBuilder);
+	private readonly v = inject(CustomSignalFormValidators);
+
+	readonly signalTooltips = viewChildren(ErrorTooltipDirectiveForSignalForms);
 
   	formGroup!: FormGroup;
 
@@ -44,23 +48,31 @@ export class AppComponent implements OnInit {
 		en: 'Invalid employee ID. Expected: “EMP-1234”.',
 	};
 
-	readonly signalFormSchema = signal<SignalFormSchema>({
+	readonly employee = signal<Employee>({
 		nameInput: '',
 		ageInput: 0,
 		employeeIdInput: '',
-		legacyNameInput: '',
+		superior: '',
 	});
 
-	signalForm: any;
+	signalForm = form(this.employee, path => {
+		this.v.requiredI18n(path.nameInput),
+		this.v.minLengthI18n(path.nameInput, 3),
+		this.v.lettersOnlyI18n(path.nameInput),
+		this.v.maxLengthI18n(path.nameInput, 10),
+
+		this.v.requiredI18n(path.ageInput),
+		this.v.minValueI18n(path.ageInput, 10),
+		this.v.maxValueI18n(path.ageInput, 100),
+
+		this.v.requiredI18n(path.employeeIdInput),
+		this.v.regexPatternI18n(path.employeeIdInput, this.employeeIdRegex, this.employeeIdRegexMsg),
+
+		this.v.required(path.superior),     // legacy (string)
+		this.v.minLength(path.superior, 3)  // legacy (string)
+	});
 
 	ngOnInit(): void {
-
-		/*
-		this.signalForm  = form(this.signalFormSchema, path => {
-		// CustomValidatorsSignal.maxLength(path.nameInput, 10);
-	});
-	*/
-
 		this.formGroup = this.formBuilder.group({
 			nameInput: new FormControl<string>('', {
 				validators: [
@@ -101,10 +113,22 @@ export class AppComponent implements OnInit {
 		this.lang.set(lang);
 	}
 
-	submit() {
+	submitReactiveForm() {
 		this.formGroup.markAllAsTouched();
 		if (!this.formGroup.valid) { 
 			return;
+		}
+	}
+
+	submitSignalForm() {
+		if (!this.signalForm().valid()) {
+			// Display Tooltips
+			this.signalTooltips().forEach(t => t.showErrorTooltip());
+			console.warn('Signal form is invalid:', this.signalForm().errorSummary());
+			return;
+		}
+		else {
+			console.warn('Signal form submitted successfully with values:', this.signalForm().value());
 		}
 	}
 }

@@ -1,9 +1,12 @@
+
+<!-- Reactive Form -->
+
 @if (formGroup) {
-	<div class="container mt-5">
-			<form [formGroup]="formGroup" (ngSubmit)="submit()">
+	<div class="container mt-4 mb-4">
+		<form [formGroup]="formGroup" (ngSubmit)="submitReactiveForm()">
 
 			<div class="d-flex align-items-center justify-content-between mb-3">
-				<h4 class="mb-0">Sample Form (i18n)</h4>
+				<h4 class="mb-0">Angular Reactive Form (i18n)</h4>
 
 				<div class="d-flex align-items-center gap-2">
 					<label class="mb-0" for="langSelect">Language</label>
@@ -72,3 +75,82 @@
 		</form>
 	</div>
 }
+
+<hr>
+
+<!-- Signal Form -->
+
+<div class="container mt-4 mb-4">
+
+	<div class="d-flex align-items-center justify-content-between mb-3">
+		<h4 class="mb-0">Signal Form (i18n)</h4>
+
+		<div class="d-flex align-items-center gap-2">
+			<label class="mb-0" for="langSelectSignal">Language</label>
+
+			<select
+				id="langSelectSignal"
+				class="form-select"
+				style="width: 160px"
+				[value]="lang()"
+				(change)="onLangChange(($any($event.target).value))">
+
+				@for (l of languages; track l.code) {
+					<option [value]="l.code">{{ l.label }}</option>
+				}
+			</select>
+		</div>
+	</div>
+
+	<p>
+		Click «Submit» without entering any values to see error tooltips.<br>
+		Change the language via the dropdown to see the tooltips update live.<br>
+		The «Employee ID» field demonstrates a regex validator where the app provides the
+		tri-language message object.
+	</p>
+
+	<div class="mb-3">
+		<input
+			#signalFormField
+			[formField]="signalForm.nameInput"
+			ngErrorTooltipForSignalForms
+			[placement]="'right'"
+			class="form-control mb-3"
+			placeholder="Enter your name*"
+			type="text">
+
+		<input
+			#signalFormField
+			[formField]="signalForm.ageInput"
+			ngErrorTooltipForSignalForms
+			[options]="tooltipOptions"
+			class="form-control mb-3"
+			placeholder="Enter your age*"
+			type="number">
+
+		<input
+			#signalFormField
+			[formField]="signalForm.employeeIdInput"
+			ngErrorTooltipForSignalForms
+			[placement]="'right'"
+			class="form-control"
+			placeholder="Employee ID (e.g. EMP-1234)*"
+			type="text">
+
+		<hr class="my-4">
+
+		<input
+			#signalFormField
+			[formField]="signalForm.superior"
+			ngErrorTooltipForSignalForms
+			[placement]="'right'"
+			class="form-control"
+			placeholder="Superior (validation always DE)*"
+			type="text">
+	</div>
+
+	<button class="btn btn-primary mt-3" type="button" (click)="submitSignalForm()">
+		Submit
+	</button>
+
+</div>

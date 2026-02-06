@@ -19,7 +19,7 @@ export class ErrorTooltipDirective implements OnInit, OnDestroy, OnChanges {
 	private readonly viewContainerRef = inject(ViewContainerRef);
 	private readonly injector = inject(EnvironmentInjector);
 	private readonly controlContainer = inject(ControlContainer);
-	private readonly ngControl= inject(NgControl, { self: true, optional: true });
+	private readonly ngControl = inject(NgControl, { self: true, optional: true });
 
 	// A merge of all options that were passed in various ways:
 	private mergedOptions!: ErrorTooltipOptions;

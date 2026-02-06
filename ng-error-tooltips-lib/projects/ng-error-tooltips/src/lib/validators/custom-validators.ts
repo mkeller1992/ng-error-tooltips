@@ -461,11 +461,33 @@ export class CustomValidators {
 	/*** Helpers ***/
 
 	private static isEmptyValue(value: unknown): boolean {
-		return value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0);
+		// null / undefined / empty string
+		if (value == null) {
+			return true;
+		}
+		
+		if (typeof value === 'string') {
+			return value.trim().length === 0;
+		}
+
+		// number: treat NaN as empty
+		if (typeof value === 'number') {
+			return Number.isNaN(value);
+		}
+
+		// arrays
+		if (Array.isArray(value)) {
+			return value.length === 0;
+		}
+
+		return false;
 	}
 
 	private static toNumberOrNull(value: unknown): number | null {
-		if (value === null || value === undefined || value === '') return null;
+		if (value === null || value === undefined || value === '') {
+			return null;
+		}
+		
 		const n = Number(value);
 		return Number.isNaN(n) ? null : n;
 	}

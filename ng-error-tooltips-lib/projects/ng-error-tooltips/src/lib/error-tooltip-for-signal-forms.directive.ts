@@ -1,15 +1,17 @@
 import { ComponentRef, computed, Directive, effect, ElementRef, EnvironmentInjector, inject, input, OnDestroy, signal, ViewContainerRef } from '@angular/core';
 
-import { Subject, filter, fromEvent, interval, merge, race, takeUntil, tap } from 'rxjs';
+import { Subject, filter, fromEvent, interval, race, takeUntil, tap } from 'rxjs';
 import { Placement } from './tooltip/placement.type';
 import { ErrorPayload } from './error-payload.type';
 import { defaultOptions } from './options/default-options.const';
 import { ErrorTooltipOptions } from './options/error-tooltip-options.interface';
 import { NgErrorTooltipComponent } from './tooltip/ng-error-tooltip.component';
-import { FORM_FIELD, FormField } from '@angular/forms/signals';
+import { ValidationError } from '@angular/forms/signals';
 import { TriLangText } from './validators/tri-lang-text.type';
 
-type AnyErrors = Record<string, unknown> | null;
+type SignalFormField = {
+  	errors(): ValidationError.WithField[];
+};
 
 @Directive({
 	selector: '[ngErrorTooltipForSignalForms]'
@@ -19,11 +21,11 @@ export class ErrorTooltipDirectiveForSignalForms implements OnDestroy {
 	private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
 	private readonly viewContainerRef = inject(ViewContainerRef);
 	private readonly injector = inject(EnvironmentInjector);
-	private readonly formField = inject<FormField<unknown> | null>(FORM_FIELD, { optional: true });
 
 	// Pass options as a single object:
 	readonly options = input<ErrorTooltipOptions>({});
 
+	readonly formField = input.required<() => SignalFormField>();
 	readonly id = input<string | number | null>(null);
 	readonly showFirstErrorOnly = input<boolean | null>(null);
 	readonly placement = input<Placement | null>(null);
@@ -56,71 +58,39 @@ export class ErrorTooltipDirectiveForSignalForms implements OnDestroy {
 	private tooltipComponent = computed(() => this.refToTooltip()?.instance ?? null);
 	private formControlPosition = signal<DOMRect | null>(null);
 
-	private readonly errorsSig = computed<AnyErrors>(() => {
-		if (this.formField) {
-			const errs = this.formField.state().errors(); // WithField[] (o.ä.)
-			if (!errs?.length) return null;
 
-			return Object.fromEntries(
-				errs.map((e: any, idx: number) => [
-					e?.kind ?? e?.error?.kind ?? `err_${idx}`,
-					e?.message ?? e?.error?.message ?? e,
-				]),
-			);
-		}
-		return null;
-	});
+	private readonly field = computed<SignalFormField>(() => this.formField()());
 
-	private errorPayloads = computed<ErrorPayload[]>(() => {
-		const merged = this.mergedOptions();
-		const errs = this.errorsSig() ?? {};
-		const entries = Object.entries(errs) as Array<[string, any]>;
 
-		console.warn('Current errors from form control:', errs);
+	private readonly errorPayloads = computed<ErrorPayload[]>(() => {
+		const { showFirstErrorOnly } = this.mergedOptions();
+		const errors = this.field().errors() ?? [];
 
-		const payloads = entries.reduce<ErrorPayload[]>((acc, [, err]) => {
-			
-			if (Array.isArray(err)) {
-				for (const e of err as any[]) {
-					const t = e?.message;
-					if (t === 'i18n' && e.hasOwnProperty('i18n')) {
-						acc.push(e['i18n'] as TriLangText);
-					}
-					else { 
-						acc.push(t);
-					}
-				}
-				return acc;
-			}
+		const payloads = errors.map(err =>
+			err.message === 'i18n' && 'i18n' in err
+			? err.i18n as TriLangText
+			: err.message as string
+		);
 
-			else if (err['message'] === 'i18n' && err.hasOwnProperty('i18n')) { 
-				acc.push(err['i18n'] as TriLangText);
-			}
-			else {
-				acc.push(err['message'] as string);
-			}
-
-			return acc;
-		}, []);
-
-		return merged.showFirstErrorOnly && payloads.length > 1 ? [payloads[0]] : payloads;
+		return showFirstErrorOnly && payloads.length
+			? [payloads[0]]
+			: payloads;
 	});
 
 
 	private isTooltipVisible = signal<boolean>(false);
 
-	private tooltipDestroyed$ = new Subject<void>();
-	private destroyAll$ = new Subject<void>();
+	private readonly destroy$ = new Subject<void>();
 
 	constructor() {
 		// Update tooltip inputs whenever options/errors change (if tooltip exists)
 		effect(() => {
 			const ref = this.refToTooltip();
-			if (!ref) { return; }
-
-			ref.setInput('options', this.mergedOptions());
-			ref.setInput('errors', this.errorPayloads());
-			ref.setInput('formControl', this.hostEl.nativeElement);
+			if (ref) {
+				ref.setInput('options', this.mergedOptions());
+				ref.setInput('errors', this.errorPayloads());
+				ref.setInput('formControl', this.hostEl.nativeElement);
+			}
 		});
 	}
 
@@ -157,7 +127,7 @@ export class ErrorTooltipDirectiveForSignalForms implements OnDestroy {
 			.pipe(
 				filter(() => this.isTooltipVisible() && !!this.tooltipComponent()),
 				tap(() => this.destroyTooltip()),
-				takeUntil(merge(this.tooltipDestroyed$, this.destroyAll$))
+				takeUntil(this.destroy$)
 			)
 			.subscribe();
 	}
@@ -178,7 +148,7 @@ export class ErrorTooltipDirectiveForSignalForms implements OnDestroy {
 						this.tooltipComponent()?.setVisibilityAndPosition(this.hostEl);
 					}
 				}),
-				takeUntil(merge(this.tooltipDestroyed$, this.destroyAll$))
+				takeUntil(this.destroy$)
 			)
 			.subscribe();
 	}
@@ -221,7 +191,7 @@ export class ErrorTooltipDirectiveForSignalForms implements OnDestroy {
 	}
 
 	private destroyTooltip(): void {
-		this.tooltipDestroyed$?.next();
+		this.destroy$.next();
 		this.refToTooltip()?.destroy();
 		this.refToTooltip.set(null);
 		this.isTooltipVisible.set(false);
@@ -234,8 +204,7 @@ export class ErrorTooltipDirectiveForSignalForms implements OnDestroy {
 
 	ngOnDestroy(): void {
 		this.destroyTooltip();
-		this.destroyAll$.next();
-		this.destroyAll$.unsubscribe();
-		this.tooltipDestroyed$.unsubscribe();
+		this.destroy$.next();
+		this.destroy$.complete();
 	}
 }

@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
-import { ErrorTooltipDirective, MockErrorTooltipDirective } from '@ng-error-tooltips';
+import { CustomSignalFormValidators, ErrorTooltipDirective, ErrorTooltipDirectiveForSignalForms, MockErrorTooltipDirective, MockErrorTooltipForSignalFormsDirective } from '@ng-error-tooltips';
 import { FormBuilder } from '@angular/forms';
 import { provideZonelessChangeDetection } from '@angular/core';
 
@@ -10,22 +10,40 @@ describe('AppComponent', () => {
 
   beforeEach(async () => {
 
+	const signalValidatorsMock: Partial<CustomSignalFormValidators> = {
+		// i18n
+		requiredI18n() {},
+		minLengthI18n() {},
+		maxLengthI18n() {},
+		lettersOnlyI18n() {},
+		minValueI18n() {},
+		maxValueI18n() {},
+		regexPatternI18n() {},
+
+		// legacy
+		required() {},
+		minLength() {},
+	};
+
     await TestBed.configureTestingModule({
       imports: [AppComponent],
       providers: [
         FormBuilder,
         provideZonelessChangeDetection(),
+		{ provide: CustomSignalFormValidators, useValue: signalValidatorsMock },
       ]
     })
     .overrideComponent(AppComponent, {
       remove: {
         imports: [
-          ErrorTooltipDirective
+          ErrorTooltipDirective,
+		  ErrorTooltipDirectiveForSignalForms
         ]
       },
       add: {
         imports: [
-          MockErrorTooltipDirective
+          MockErrorTooltipDirective,
+		  MockErrorTooltipForSignalFormsDirective
         ]
       }
     })
@@ -61,7 +79,7 @@ describe('AppComponent', () => {
     nameInput?.setValue('');
     ageInput?.setValue('');
 
-    component.submit();
+    component.submitReactiveForm();
 
     expect(nameInput?.touched).toBe(true);
     expect(ageInput?.touched).toBe(true);

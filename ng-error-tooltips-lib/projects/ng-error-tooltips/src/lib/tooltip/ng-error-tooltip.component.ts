@@ -97,14 +97,14 @@ export class NgErrorTooltipComponent implements OnInit, OnChanges {
 
 	ngOnInit() {
 		if (this.options) {
-		this.applyOptions(this.options);
+			this.applyOptions(this.options);
 		}    
 	}
 
 	ngOnChanges(_: SimpleChanges) {
 		// Re-apply when inputs change (e.g., options updated)
 		if (this.options) {
-		this.applyOptions(this.options);
+			this.applyOptions(this.options);
 		}
 	}
 

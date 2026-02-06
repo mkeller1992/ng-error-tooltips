@@ -1,8 +1,14 @@
-import { Component, OnInit, WritableSignal, inject } from '@angular/core';
+import { Component, OnInit, WritableSignal, inject, signal } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CustomValidators, ErrorTooltipDirective, ErrorTooltipOptions, type SupportedLanguage, type TriLangText } from '@ng-error-tooltips';
 import { demoLang } from './app.config';
 
+interface SignalFormSchema {
+	nameInput: string;
+	ageInput: number;
+	employeeIdInput: string;
+	legacyNameInput: string;
+}
 
 @Component({
   selector: 'app-root',
@@ -38,7 +44,23 @@ export class AppComponent implements OnInit {
 		en: 'Invalid employee ID. Expected: “EMP-1234”.',
 	};
 
+	readonly signalFormSchema = signal<SignalFormSchema>({
+		nameInput: '',
+		ageInput: 0,
+		employeeIdInput: '',
+		legacyNameInput: '',
+	});
+
+	signalForm: any;
+
 	ngOnInit(): void {
+
+		/*
+		this.signalForm  = form(this.signalFormSchema, path => {
+		// CustomValidatorsSignal.maxLength(path.nameInput, 10);
+	});
+	*/
+
 		this.formGroup = this.formBuilder.group({
 			nameInput: new FormControl<string>('', {
 				validators: [

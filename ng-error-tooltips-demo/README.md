@@ -4,7 +4,7 @@
 ![build status](https://github.com/mkeller1992/ng-error-tooltips/actions/workflows/npm-publish.yml/badge.svg)
 [![codecov](https://codecov.io/gh/mkeller1992/ng-error-tooltips/graph/badge.svg?token=FDYFIOR4LQ)](https://codecov.io/gh/mkeller1992/ng-error-tooltips)
 
-An Angular library for **Reactive Forms** and **Signal Forms** that displays tooltips on form inputs with errors, providing a user-friendly way to visualize validation messages.
+An Angular library for **Reactive Forms** and **Signal Forms** that displays tooltips on form inputs with errors.
 
 The latest library version is compatible with **Angular 21**.  
 Starting with version **20.1.0**, `ng-error-tooltips` is fully **zoneless-compatible**.
@@ -19,8 +19,6 @@ https://mkeller1992.github.io/ng-error-tooltips/
 
 ## Install
 
-To install the library, enter the following command in your console:
-
 ```bash
 npm i ng-error-tooltips
 ```
@@ -29,25 +27,39 @@ npm i ng-error-tooltips
 
 ## Setup
 
-### For apps based on standalone components
-
-#### Reactive Forms directive:
+### Standalone apps (ApplicationConfig / app.config.ts)
 
 ```ts
-import { ErrorTooltipDirective } from '@ng-error-tooltips';
+import { ApplicationConfig, provideZonelessChangeDetection, signal } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideErrorTooltips, type SupportedLanguage } from '@ng-error-tooltips';
+import { validate } from '@angular/forms/signals';
+
+import { routes } from './app.routes';
+
+// Demo-language signal (in real apps: inject(LanguageService).currentLanguageCode)
+export const demoLang = signal<SupportedLanguage>('de');
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRouter(routes),
+    provideZonelessChangeDetection(),
+
+    // lang is optional (defaults to 'de')
+    // validate is only required for Signal Forms / CustomSigValidators
+    provideErrorTooltips({ lang: demoLang, validate }),
+  ],
+};
 ```
 
-#### Signal Forms directive:
+### Directives
 
 ```ts
-import { ErrorTooltipSigDirective } from '@ng-error-tooltips';
-```
-```ts
-@Component({
-  // ...
-  imports: [ErrorTooltipDirective, ErrorTooltipSigDirective]
-})
-export class AppComponent {}
+import {
+  ErrorTooltipDirective,
+  ErrorTooltipSigDirective,
+  ErrorTooltipSigFormDirective,
+} from '@ng-error-tooltips';
 ```
 
 ---
@@ -57,8 +69,7 @@ export class AppComponent {}
 ### Reactive Forms
 
 Define a reactive form with validators in your TypeScript component.  
-You can use validators from the `CustomValidators` class, which is part of this library.  
-For applications with language switching support, use the `CustomValidatorsI18n` variants instead.
+For applications with language switching support, use the `CustomValidatorsI18n` variants.
 
 ```ts
 import { Component, inject } from '@angular/core';
@@ -72,7 +83,6 @@ import { ErrorTooltipDirective, CustomValidators } from '@ng-error-tooltips';
   imports: [FormsModule, ReactiveFormsModule, ErrorTooltipDirective],
 })
 export class AppComponent {
-
   private readonly formBuilder = inject(FormBuilder);
 
   formGroup: FormGroup = this.formBuilder.group({
@@ -86,13 +96,8 @@ export class AppComponent {
 }
 ```
 
-Create the corresponding form in your HTML file and add `ngErrorTooltip` to the form fields where error tooltips should be displayed.
-
 ```html
 <form [formGroup]="formGroup" (ngSubmit)="submit()">
-
-  <h4>Sample Form</h4>
-
   <input
     ngErrorTooltip
     formControlName="nameInput"
@@ -100,16 +105,15 @@ Create the corresponding form in your HTML file and add `ngErrorTooltip` to the 
     type="text">
 
   <button type="submit">Submit</button>
-
 </form>
 ```
 
 ### Signal Forms
 
 ```ts
-import { Component, inject, signal, viewChildren } from '@angular/core';
-import { form, FormField } from '@angular/forms/signals';
-import { CustomSigValidators, ErrorTooltipSigDirective } from '@ng-error-tooltips';
+import { Component, inject, signal, viewChild } from '@angular/core';
+import { form, FormField, submit } from '@angular/forms/signals';
+import { CustomSigValidators, ErrorTooltipSigDirective, ErrorTooltipSigFormDirective } from '@ng-error-tooltips';
 
 interface Employee {
   name: string;
@@ -118,12 +122,12 @@ interface Employee {
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  imports: [FormField, ErrorTooltipSigDirective],
+  imports: [FormField, ErrorTooltipSigDirective, ErrorTooltipSigFormDirective],
 })
 export class AppComponent {
   private readonly v = inject(CustomSigValidators);
 
-  readonly signalTooltips = viewChildren(ErrorTooltipSigDirective);
+  readonly ttForm = viewChild(ErrorTooltipSigFormDirective);
 
   readonly employee = signal<Employee>({
     name: '',
@@ -134,9 +138,13 @@ export class AppComponent {
     this.v.minLengthI18n(path.name, 3),
   ]);
 
-  submit() {
+  async submit() {
+    // marks all fields touched + runs validation
+    await submit(this.signalForm, async () => undefined);
+
     if (!this.signalForm().valid()) {
-      this.signalTooltips().forEach(t => t.showErrorTooltip());
+      // show all tooltips inside the container
+      this.ttForm()?.showAll();
       return;
     }
   }
@@ -144,19 +152,22 @@ export class AppComponent {
 ```
 
 ```html
-<input
-  [formField]="signalForm.name"
-  ngErrorTooltipSig
-  placeholder="Enter your name*"
-  type="text">
+<div ngErrorTooltipSigForm>
+  <input
+    [formField]="signalForm.name"
+    ngErrorTooltipSig
+    placeholder="Enter your name*"
+    type="text">
+</div>
+
+<button type="button" (click)="submit()">Submit</button>
 ```
-To show all tooltips on submit, call showErrorTooltip() on all directive instances (see viewChildren(...) example above).
 
 ---
 
 ### Two ways to pass additional properties
 
-You can pass separate properties, such as `placement`, as shown in the example below:
+You can pass separate properties, such as `placement`:
 
 ```html
 <input
@@ -167,7 +178,7 @@ You can pass separate properties, such as `placement`, as shown in the example b
   type="text">
 ```
 
-Alternatively, you can pass one or more properties via an `ErrorTooltipOptions` object:
+Alternatively, pass one or more properties via an `ErrorTooltipOptions` object:
 
 ```ts
 import { ErrorTooltipOptions } from '@ng-error-tooltips';
@@ -182,119 +193,23 @@ tooltipOptions: ErrorTooltipOptions = {
   formControlName="ageInput"
   ngErrorTooltip
   [options]="tooltipOptions"
-  class="form-control"
   placeholder="Enter your age*"
   type="number">
 ```
 
----
-
 **Note:** Explicit inputs (e.g. `[placement]`) override the same values provided via `[options]`.
 
+---
 
 ## Internationalisation (i18n)
 
 Starting with version **21.1.0**, `ng-error-tooltips` supports **reactive multi-language error messages**.
 
-The library itself is intentionally lightweight regarding translations:
-
-- No dependency on `ngx-translate` or similar libraries
-- No internal language management
-- Fully signal-based and zoneless-friendly
-
-Your application remains the single source of truth for the active language.
-
-
-
-### Default behaviour (no configuration)
-
 If you do nothing, the tooltip falls back to **German (`de`)** error messages.
 
-This guarantees **backwards compatibility** for existing applications.
-
-
-
-### Providing the active language
-
-To enable language switching, provide the current language as a  
-`Signal<'de' | 'fr' | 'en'>` using `provideErrorTooltips`.
-
-Example (standalone bootstrap):
-
-```ts
-import { bootstrapApplication, inject } from '@angular/core';
-import { provideErrorTooltips } from '@ng-error-tooltips';
-import { LanguageService } from './language.service';
-
-export const currentLanguageCode = signal<SupportedLanguage>(defaultLanguage);
-
-bootstrapApplication(AppComponent, {
-  providers: [
-    provideErrorTooltips({ lang: currentLanguageCode })
-  ]
-});
-```
+To enable language switching, provide the current language as a `Signal<'de' | 'fr' | 'en'>` using `provideErrorTooltips`.
 
 Whenever the language signal changes, all visible error tooltips update automatically.
-
-
-
-### Using i18n-aware validators
-
-For applications with language switching, use the `CustomValidatorsI18n` variants.
-
-```ts
-import { CustomValidatorsI18n } from '@ng-error-tooltips';
-
-formGroup = this.fb.group({
-  name: ['', [
-    CustomValidatorsI18n.requiredI18n(),
-    CustomValidatorsI18n.minLengthI18n(3)
-  ]]
-});
-```
-
-Internally, these validators return tri-language payloads:
-
-```ts
-{
-  de: 'Eingabe erforderlich',
-  fr: 'Saisie requise',
-  en: 'Input required'
-}
-```
-
-The tooltip resolves the correct language automatically.
-
-
-
-### App-specific messages (regexPattern)
-
-For domain-specific validation rules, all translations must be provided explicitly:
-
-```ts
-CustomValidatorsI18n.regexPatternI18n(
-  /^[A-Z]{3}\d{4}$/,
-  {
-    de: 'Ungültiges Format',
-    fr: 'Format invalide',
-    en: 'Invalid format'
-  }
-);
-```
-
-This is intentional, as such messages are application-specific and cannot be provided by the library.
-
-
-
-### Mixing legacy and i18n validators
-
-You can freely mix:
-
-- legacy validators (`CustomValidators.required()`)
-- i18n validators (`CustomValidatorsI18n.requiredI18n()`)
-
-The tooltip handles both transparently.
 
 ---
 
@@ -319,8 +234,6 @@ The tooltip handles both transparently.
 
 ### Mocking `ErrorTooltipDirective` (Reactive Forms)
 
-In unit tests, you may want to replace the real directive with the mock directive provided by the library.
-
 ```ts
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
@@ -332,18 +245,13 @@ describe('AppComponent', () => {
   let fixture: ComponentFixture<AppComponent>;
 
   beforeEach(async () => {
-
     await TestBed.configureTestingModule({
       imports: [AppComponent],
       providers: [FormBuilder]
     })
     .overrideComponent(AppComponent, {
-      remove: {
-        imports: [ErrorTooltipDirective]
-      },
-      add: {
-        imports: [MockErrorTooltipDirective]
-      }
+      remove: { imports: [ErrorTooltipDirective] },
+      add: { imports: [MockErrorTooltipDirective] }
     })
     .compileComponents();
 
@@ -363,12 +271,8 @@ await TestBed.configureTestingModule({
   imports: [AppComponent],
 })
   .overrideComponent(AppComponent, {
-    remove: {
-      imports: [ErrorTooltipSigDirective]
-    },
-    add: {
-      imports: [MockErrorTooltipSigDirective]
-    }
+    remove: { imports: [ErrorTooltipSigDirective] },
+    add: { imports: [MockErrorTooltipSigDirective] }
   })
   .compileComponents();
 ```

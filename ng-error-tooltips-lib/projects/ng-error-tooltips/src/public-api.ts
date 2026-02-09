@@ -11,6 +11,7 @@ export * from './lib/validators/supported-language.type';
 export * from './lib/validators/tri-lang-text.type';
 export * from './lib/error-tooltip-lang.token';
 export * from './lib/error-tooltip-sig-validate.token';
+export * from './lib/error-tooltip-sig-form.directive';
 
 // Export the mocks
 export * from './lib/mocks/mock-error-tooltip.directive';

@@ -2,7 +2,7 @@ import { Component, OnInit, WritableSignal, inject, signal, viewChildren } from 
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CustomSigValidators, CustomValidators, ErrorTooltipDirective, ErrorTooltipSigDirective, ErrorTooltipOptions, type SupportedLanguage, type TriLangText } from '@ng-error-tooltips';
 import { demoLang } from './app.config';
-import { form, FormField } from '@angular/forms/signals';
+import { form, FormField, submit } from '@angular/forms/signals';
 
 interface Employee {
 	nameInput: string;
@@ -120,15 +120,19 @@ export class AppComponent implements OnInit {
 		}
 	}
 
-	submitSignalForm() {
+	async submitSignalForm() {
+		await this.markSignalFormTouched(this.signalForm);
+
 		if (!this.signalForm().valid()) {
-			// Display Tooltips
 			this.signalTooltips().forEach(t => t.showErrorTooltip());
 			console.warn('Signal form is invalid:', this.signalForm().errorSummary());
 			return;
 		}
-		else {
-			console.warn('Signal form submitted successfully with values:', this.signalForm().value());
-		}
+
+		console.warn('Signal form submitted successfully with values:', this.signalForm().value());
+	}
+
+	private	async markSignalFormTouched(formSig: typeof this.signalForm) {
+		await submit(formSig, async () => undefined);
 	}
 }

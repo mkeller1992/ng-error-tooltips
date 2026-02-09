@@ -116,6 +116,8 @@
 			ngErrorTooltipSig
 			[placement]="'right'"
 			class="form-control mb-3"
+			[class.invalid]="signalForm.nameInput().invalid() && signalForm.nameInput().touched()"
+			[class.valid]="signalForm.nameInput().valid() && signalForm.nameInput().touched()"
 			placeholder="Enter your name*"
 			type="text">
 
@@ -125,7 +127,8 @@
 			ngErrorTooltipSig
 			[options]="tooltipOptions"
 			class="form-control mb-3"
-			placeholder="Enter your age*"
+			[class.invalid]="signalForm.ageInput().invalid() && signalForm.ageInput().touched()"
+			[class.valid]="signalForm.ageInput().valid() && signalForm.ageInput().touched()"
 			type="number">
 
 		<input
@@ -134,6 +137,8 @@
 			ngErrorTooltipSig
 			[placement]="'right'"
 			class="form-control"
+			[class.invalid]="signalForm.employeeIdInput().invalid() && signalForm.employeeIdInput().touched()"
+			[class.valid]="signalForm.employeeIdInput().valid() && signalForm.employeeIdInput().touched()"
 			placeholder="Employee ID (e.g. EMP-1234)*"
 			type="text">
 
@@ -145,6 +150,8 @@
 			ngErrorTooltipSig
 			[placement]="'right'"
 			class="form-control"
+			[class.invalid]="signalForm.superior().invalid() && signalForm.superior().touched()"
+			[class.valid]="signalForm.superior().valid() && signalForm.superior().touched()"
 			placeholder="Superior (validation always DE)*"
 			type="text">
 	</div>

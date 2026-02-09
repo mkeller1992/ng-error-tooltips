@@ -4,10 +4,15 @@
 }
 
 input {
-    &.ng-valid.ng-touched {
-        border: 3px solid green;
-    }
-    &.ng-invalid.ng-touched {
-        border: 3px solid red;
-    }
+	&.ng-valid.ng-touched,
+	&.valid {
+		border: 3px solid green;
+		background-color: rgba(0, 128, 0, 0.06); // very light green
+	}
+
+	&.ng-invalid.ng-touched,
+	&.invalid {
+		border: 3px solid red;
+		background-color: rgba(220, 0, 0, 0.06); // light red, non-aggressive
+	}
 }

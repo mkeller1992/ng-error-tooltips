@@ -248,7 +248,6 @@ export class CustomSigValidators {
 	requiredI18n(path: SchemaPath<any>, errorMessage?: TriLangText): void {
 		this.validate(path, (ctx) => {
 		const isEmpty = this.isEmptyValue(ctx.value());
-		console.warn('CTX VALUE:', ctx.value(), 'IS EMPTY?', isEmpty);
 		const msg = errorMessage ?? tri('required');
 		return isEmpty ? { kind: 'required', message: 'i18n', i18n: msg } : undefined;
 		});

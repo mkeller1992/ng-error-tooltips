@@ -128,7 +128,7 @@ export class AppComponent implements OnInit {
 		await this.markSignalFormTouched(this.signalForm);
 
 		if (!this.signalForm().valid()) {
-			this.ttForm()?.showAll();
+			this.ttForm()?.showErrorTooltips();
 			return;
 		}
 

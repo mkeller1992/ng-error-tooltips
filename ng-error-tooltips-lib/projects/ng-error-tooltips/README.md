@@ -144,9 +144,11 @@ export class AppComponent {
 
     if (!this.signalForm().valid()) {
       // show all tooltips inside the container
-      this.ttForm()?.showAll();
-      return;
+      this.ttForm()?.showErrorTooltips();
     }
+	else {
+		this.ttForm()?.hideErrorTooltips();
+	}
   }
 }
 ```

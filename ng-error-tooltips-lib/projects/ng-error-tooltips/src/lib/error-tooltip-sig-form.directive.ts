@@ -9,11 +9,11 @@ import { ErrorTooltipSigDirective } from './error-tooltip-sig.directive';
 export class ErrorTooltipSigFormDirective {
 	private readonly tooltips = contentChildren(ErrorTooltipSigDirective, { descendants: true });
 
-	showAll(): void {
+	showErrorTooltips(): void {
 		this.tooltips().forEach(t => t.showErrorTooltip());
 	}
 
-	hideAll(): void {
+	hideErrorTooltips(): void {
 		this.tooltips().forEach(t => t.hideErrorTooltip());
 	}
 }

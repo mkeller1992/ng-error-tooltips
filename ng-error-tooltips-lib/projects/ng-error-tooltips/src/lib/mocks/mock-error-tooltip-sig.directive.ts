@@ -8,11 +8,11 @@ type SignalFormFieldLike = {
 };
 
 @Directive({
-  selector: '[ngErrorTooltipForSignalForms]',
-  exportAs: 'ngErrorTooltipForSignalForms',
+  selector: '[ngErrorTooltipSig]',
+  exportAs: 'ngErrorTooltipSig',
   standalone: true,
 })
-export class MockErrorTooltipForSignalFormsDirective {
+export class MockErrorTooltipSigDirective {
   // Optional: keep what the test passed in (useful for assertions/debugging)
   private collectedOptions: Partial<ErrorTooltipOptions> = {};
 

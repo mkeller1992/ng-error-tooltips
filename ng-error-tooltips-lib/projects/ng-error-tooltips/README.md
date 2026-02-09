@@ -4,7 +4,7 @@
 ![build status](https://github.com/mkeller1992/ng-error-tooltips/actions/workflows/npm-publish.yml/badge.svg)
 [![codecov](https://codecov.io/gh/mkeller1992/ng-error-tooltips/graph/badge.svg?token=FDYFIOR4LQ)](https://codecov.io/gh/mkeller1992/ng-error-tooltips)
 
-An Angular library for reactive forms that displays tooltips on form inputs with errors, providing a user-friendly way to visualize validation messages.
+An Angular library for **Reactive Forms** and **Signal Forms** that displays tooltips on form inputs with errors, providing a user-friendly way to visualize validation messages.
 
 The latest library version is compatible with **Angular 21**.  
 Starting with version **20.1.0**, `ng-error-tooltips` is fully **zoneless-compatible**.
@@ -31,16 +31,21 @@ npm i ng-error-tooltips
 
 ### For apps based on standalone components
 
-Import `ErrorTooltipDirective` directly in your component:
+#### Reactive Forms directive:
 
 ```ts
 import { ErrorTooltipDirective } from '@ng-error-tooltips';
+```
 
+#### Signal Forms directive:
+
+```ts
+import { ErrorTooltipSigDirective } from '@ng-error-tooltips';
+```
+```ts
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss'],
-  imports: [ErrorTooltipDirective]
+  // ...
+  imports: [ErrorTooltipDirective, ErrorTooltipSigDirective]
 })
 export class AppComponent {}
 ```
@@ -48,6 +53,8 @@ export class AppComponent {}
 ---
 
 ## Usage
+
+### Reactive Forms
 
 Define a reactive form with validators in your TypeScript component.  
 You can use validators from the `CustomValidators` class, which is part of this library.  
@@ -96,6 +103,54 @@ Create the corresponding form in your HTML file and add `ngErrorTooltip` to the 
 
 </form>
 ```
+
+### Signal Forms
+
+```ts
+import { Component, inject, signal, viewChildren } from '@angular/core';
+import { form, FormField } from '@angular/forms/signals';
+import { CustomSigValidators, ErrorTooltipSigDirective } from '@ng-error-tooltips';
+
+interface Employee {
+  name: string;
+}
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  imports: [FormField, ErrorTooltipSigDirective],
+})
+export class AppComponent {
+  private readonly v = inject(CustomSigValidators);
+
+  readonly signalTooltips = viewChildren(ErrorTooltipSigDirective);
+
+  readonly employee = signal<Employee>({
+    name: '',
+  });
+
+  readonly signalForm = form(this.employee, path => [
+    this.v.requiredI18n(path.name),
+    this.v.minLengthI18n(path.name, 3),
+  ]);
+
+  submit() {
+    if (!this.signalForm().valid()) {
+      this.signalTooltips().forEach(t => t.showErrorTooltip());
+      return;
+    }
+  }
+}
+```
+
+```html
+<input
+  [formField]="signalForm.name"
+  ngErrorTooltipSig
+  placeholder="Enter your name*"
+  type="text">
+```
+To show all tooltips on submit, call showErrorTooltip() on all directive instances (see viewChildren(...) example above).
 
 ---
 
@@ -259,7 +314,7 @@ The tooltip handles both transparently.
 
 ## Angular Jest unit tests
 
-### Mocking `ErrorTooltipDirective`
+### Mocking `ErrorTooltipDirective` (Reactive Forms)
 
 In unit tests, you may want to replace the real directive with the mock directive provided by the library.
 
@@ -294,4 +349,23 @@ describe('AppComponent', () => {
     fixture.detectChanges();
   });
 });
+```
+
+### Mocking `ErrorTooltipSigDirective` (Signal Forms)
+
+```ts
+import { ErrorTooltipSigDirective, MockErrorTooltipSigDirective } from '@ng-error-tooltips';
+
+await TestBed.configureTestingModule({
+  imports: [AppComponent],
+})
+  .overrideComponent(AppComponent, {
+    remove: {
+      imports: [ErrorTooltipSigDirective]
+    },
+    add: {
+      imports: [MockErrorTooltipSigDirective]
+    }
+  })
+  .compileComponents();
 ```

@@ -1,6 +1,6 @@
 import { Component, OnInit, WritableSignal, inject, signal, viewChildren } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CustomSignalFormValidators, CustomValidators, ErrorTooltipDirective, ErrorTooltipDirectiveForSignalForms, ErrorTooltipOptions, type SupportedLanguage, type TriLangText } from '@ng-error-tooltips';
+import { CustomSigValidators, CustomValidators, ErrorTooltipDirective, ErrorTooltipSigDirective, ErrorTooltipOptions, type SupportedLanguage, type TriLangText } from '@ng-error-tooltips';
 import { demoLang } from './app.config';
 import { form, FormField } from '@angular/forms/signals';
 
@@ -15,13 +15,13 @@ interface Employee {
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
-  imports: [FormsModule, ReactiveFormsModule, FormField, ErrorTooltipDirective, ErrorTooltipDirectiveForSignalForms],
+  imports: [FormsModule, ReactiveFormsModule, FormField, ErrorTooltipDirective, ErrorTooltipSigDirective],
 })
 export class AppComponent implements OnInit {
   	private readonly formBuilder = inject(FormBuilder);
-	private readonly v = inject(CustomSignalFormValidators);
+	private readonly v = inject(CustomSigValidators);
 
-	readonly signalTooltips = viewChildren(ErrorTooltipDirectiveForSignalForms);
+	readonly signalTooltips = viewChildren(ErrorTooltipSigDirective);
 
   	formGroup!: FormGroup;
 

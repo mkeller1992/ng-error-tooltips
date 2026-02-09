@@ -14,10 +14,10 @@ type SignalFormField = {
 };
 
 @Directive({
-	selector: '[ngErrorTooltipForSignalForms]'
+	selector: '[ngErrorTooltipSig]'
 })
 
-export class ErrorTooltipDirectiveForSignalForms implements OnDestroy {
+export class ErrorTooltipSigDirective implements OnDestroy {
 	private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
 	private readonly viewContainerRef = inject(ViewContainerRef);
 	private readonly injector = inject(EnvironmentInjector);

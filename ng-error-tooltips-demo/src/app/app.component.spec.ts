@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
-import { CustomSignalFormValidators, ErrorTooltipDirective, ErrorTooltipDirectiveForSignalForms, MockErrorTooltipDirective, MockErrorTooltipForSignalFormsDirective } from '@ng-error-tooltips';
+import { CustomSigValidators, ErrorTooltipDirective, ErrorTooltipSigDirective, MockErrorTooltipDirective, MockErrorTooltipSigDirective } from '@ng-error-tooltips';
 import { FormBuilder } from '@angular/forms';
 import { provideZonelessChangeDetection } from '@angular/core';
 
@@ -10,7 +10,7 @@ describe('AppComponent', () => {
 
   beforeEach(async () => {
 
-	const signalValidatorsMock: Partial<CustomSignalFormValidators> = {
+	const signalValidatorsMock: Partial<CustomSigValidators> = {
 		// i18n
 		requiredI18n() {},
 		minLengthI18n() {},
@@ -30,20 +30,20 @@ describe('AppComponent', () => {
       providers: [
         FormBuilder,
         provideZonelessChangeDetection(),
-		{ provide: CustomSignalFormValidators, useValue: signalValidatorsMock },
+		{ provide: CustomSigValidators, useValue: signalValidatorsMock },
       ]
     })
     .overrideComponent(AppComponent, {
       remove: {
         imports: [
           ErrorTooltipDirective,
-		  ErrorTooltipDirectiveForSignalForms
+		  ErrorTooltipSigDirective
         ]
       },
       add: {
         imports: [
           MockErrorTooltipDirective,
-		  MockErrorTooltipForSignalFormsDirective
+		  MockErrorTooltipSigDirective
         ]
       }
     })

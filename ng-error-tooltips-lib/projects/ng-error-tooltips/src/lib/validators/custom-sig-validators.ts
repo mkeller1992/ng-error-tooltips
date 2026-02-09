@@ -2,13 +2,13 @@ import { SchemaPath } from '@angular/forms/signals';
 import { ERROR_MESSAGES, tri } from './error-messages.const';
 import { TriLangText } from './tri-lang-text.type';
 import { inject, Injectable } from '@angular/core';
-import { ERROR_TOOLTIP_SIGNAL_FORM_VALIDATE } from '../error-tooltip-signal-form-validate.token';
+import { ERROR_TOOLTIP_SIG_VALIDATE } from '../error-tooltip-sig-validate.token';
 
 @Injectable(
 	{ providedIn: 'root' }
 )
-export class CustomSignalFormValidators {
-	private readonly validate = inject(	ERROR_TOOLTIP_SIGNAL_FORM_VALIDATE);
+export class CustomSigValidators {
+	private readonly validate = inject(	ERROR_TOOLTIP_SIG_VALIDATE);
 
 	required(path: SchemaPath<any>, errorMessage?: string): void {
 		this.validate(path, (ctx) => {

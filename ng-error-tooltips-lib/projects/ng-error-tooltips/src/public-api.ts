@@ -16,3 +16,4 @@ export * from './lib/error-tooltip-sig-form.directive';
 // Export the mocks
 export * from './lib/mocks/mock-error-tooltip.directive';
 export * from './lib/mocks/mock-error-tooltip-sig.directive';
+export * from './lib/mocks/mock-error-tooltip-sig-form.directive';

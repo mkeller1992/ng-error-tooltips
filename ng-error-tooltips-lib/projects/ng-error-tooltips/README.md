@@ -264,7 +264,7 @@ describe('AppComponent', () => {
 });
 ```
 
-### Mocking `ErrorTooltipSigDirective` (Signal Forms)
+### Mocking `ErrorTooltipSigDirective` and `ErrorTooltipSigFormDirective` (Signal Forms)
 
 ```ts
 import { ErrorTooltipSigDirective, MockErrorTooltipSigDirective } from '@ng-error-tooltips';
@@ -273,8 +273,8 @@ await TestBed.configureTestingModule({
   imports: [AppComponent],
 })
   .overrideComponent(AppComponent, {
-    remove: { imports: [ErrorTooltipSigDirective] },
-    add: { imports: [MockErrorTooltipSigDirective] }
+    remove: { imports: [ErrorTooltipSigDirective, ErrorTooltipSigFormDirective] },
+    add: { imports: [MockErrorTooltipSigDirective, MockErrorTooltipSigFormDirective] }
   })
   .compileComponents();
 ```

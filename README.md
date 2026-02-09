@@ -189,6 +189,9 @@ tooltipOptions: ErrorTooltipOptions = {
 
 ---
 
+**Note:** Explicit inputs (e.g. `[placement]`) override the same values provided via `[options]`.
+
+
 ## Internationalisation (i18n)
 
 Starting with version **21.1.0**, `ng-error-tooltips` supports **reactive multi-language error messages**.

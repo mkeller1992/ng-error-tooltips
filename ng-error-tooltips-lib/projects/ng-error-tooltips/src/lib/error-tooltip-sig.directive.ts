@@ -85,11 +85,23 @@ export class ErrorTooltipSigDirective implements OnDestroy {
 	constructor() {
 		// Update tooltip inputs whenever options/errors change (if tooltip exists)
 		effect(() => {
+			
+			// Always read these so the effect tracks them as dependencies
+			const opts = this.mergedOptions();
+			const errs = this.errorPayloads();
+			const host = this.hostEl.nativeElement;
+
 			const ref = this.refToTooltip();
-			if (ref) {
-				ref.setInput('options', this.mergedOptions());
-				ref.setInput('errors', this.errorPayloads());
-				ref.setInput('formControl', this.hostEl.nativeElement);
+			if (!ref) { return; }
+
+			ref.setInput('options', opts);
+			ref.setInput('errors', errs);
+			ref.setInput('formControl', host);
+
+			// Re-position if visible (placement/offset changes need it)
+			const comp = this.tooltipComponent();
+			if (this.isTooltipVisible() && comp) {
+				comp.showTooltip(this.hostEl);
 			}
 		});
 	}
@@ -174,12 +186,8 @@ export class ErrorTooltipSigDirective implements OnDestroy {
     	// Create the component using the ViewContainerRef.
     	// This way the component is automatically added to the change detection cycle of the Angular application
     	const ref = this.viewContainerRef.createComponent(NgErrorTooltipComponent, { injector: this.injector });
+		
 		this.refToTooltip.set(ref);
-
-		// Set the data property of the component instance in a way that ngOnChanges is triggered:
-		ref.setInput('errors', this.errorPayloads());
-		ref.setInput('options', this.mergedOptions());
-		ref.setInput('formControl', this.hostEl.nativeElement);
 
 		const comp = this.tooltipComponent();
 		if (!comp) { return; }

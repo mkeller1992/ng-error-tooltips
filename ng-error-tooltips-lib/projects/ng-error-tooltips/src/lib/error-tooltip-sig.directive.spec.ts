@@ -2,12 +2,19 @@
 import { Component, DebugElement, provideZonelessChangeDetection, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { FormBuilder, FormGroup, FormGroupDirective, ReactiveFormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 
-import { ErrorTooltipDirective } from './error-tooltip.directive';
+import { ErrorTooltipSigDirective } from './error-tooltip-sig.directive';
 import { defaultOptions } from './options/default-options.const';
 import { ErrorTooltipOptions } from './options/error-tooltip-options.interface';
+
+/**
+ * Minimal shape expected by the directive.
+ * (Matches: type SignalFormField = { errors(): ValidationError.WithField[]; })
+ */
+type SignalFormFieldLike = {
+	errors(): any[];
+};
 
 /**
  * Host A: binds BOTH [options] and [placement] (explicit placement wins)
@@ -15,26 +22,33 @@ import { ErrorTooltipOptions } from './options/error-tooltip-options.interface';
 @Component({
 	standalone: false,
 	template: `
-		<form [formGroup]="form" (ngSubmit)="noop()">
-			<input
-				type="text"
-				formControlName="name"
-				ngErrorTooltip
-				[options]="options()"
-				[placement]="placement">
-		</form>
+		<input
+			type="text"
+			ngErrorTooltipSig
+			[formField]="formField"
+			[options]="options()"
+			[placement]="placement">
 	`
 })
-class HostWithExplicitPlacementComponent {
-	readonly form: FormGroup;
-
+class HostSigWithExplicitPlacementComponent {
+	// Options are signals (just like your real app usage)
 	options = signal<ErrorTooltipOptions>({ placement: 'top', zIndex: 2000 });
 
 	// Must be set BEFORE first detectChanges to avoid NG0100
 	placement: any = null;
 
-	constructor(fb: FormBuilder) {
-		this.form = fb.group({ name: [''] });
+	// Errors backing signal
+	private readonly _errors = signal<any[]>([]);
+
+	// Must be a function returning a SignalFormField-like object.
+	// Directive expects: input.required<() => SignalFormField>()
+	formField = () =>
+		({
+			errors: () => this._errors(),
+		} as SignalFormFieldLike);
+
+	setErrors(errors: any[] | null) {
+		this._errors.set(errors ?? []);
 	}
 
 	noop() {}
@@ -46,22 +60,24 @@ class HostWithExplicitPlacementComponent {
 @Component({
 	standalone: false,
 	template: `
-		<form [formGroup]="form" (ngSubmit)="noop()">
-			<input
-				type="text"
-				formControlName="name"
-				ngErrorTooltip
-				[options]="options()">
-		</form>
+		<input
+			type="text"
+			ngErrorTooltipSig
+			[formField]="formField"
+			[options]="options()">
 	`
 })
-class HostOptionsOnlyComponent {
-	readonly form: FormGroup;
-
+class HostSigOptionsOnlyComponent {
 	options = signal<ErrorTooltipOptions>({ placement: 'top', zIndex: 2000 });
+	private readonly _errors = signal<any[]>([]);
 
-	constructor(fb: FormBuilder) {
-		this.form = fb.group({ name: [''] });
+	formField = () =>
+		({
+			errors: () => this._errors(),
+		} as SignalFormFieldLike);
+
+	setErrors(errors: any[] | null) {
+		this._errors.set(errors ?? []);
 	}
 
 	noop() {}
@@ -69,7 +85,7 @@ class HostOptionsOnlyComponent {
 
 /**
  * JSDOM sometimes lacks elementFromPoint. Your real tooltip uses it.
- * Provide a harmless polyfill so tests never crash.
+ * Provide a harmless polyfill so tests never crash (even if a real component slips through).
  */
 function ensureElementFromPointExists(): void {
 	const docAny = document as any;
@@ -89,18 +105,13 @@ async function flush(): Promise<void> {
 
 	// Jest fake timers path
 	if (typeof j.getTimerCount === 'function') {
-		// Run timers scheduled so far (setTimeout/RAF mocks)
 		j.runOnlyPendingTimers();
-
-		// Run microtasks that might have been queued by timers
 		await Promise.resolve();
 
-		// Some Angular schedulers queue "ticks"
 		if (typeof j.runAllTicks === 'function') {
 			j.runAllTicks();
 		}
 
-		// One more microtask pass after ticks
 		await Promise.resolve();
 		return;
 	}
@@ -162,15 +173,14 @@ afterEach(() => {
 	jest.useRealTimers();
 });
 
-async function setupHarness<THost>(
+async function setupHarness<THost extends { setErrors: (e: any[] | null) => void }>(
 	hostType: new (...args: any[]) => THost
 ): Promise<{
 	fixture: ComponentFixture<THost>;
 	component: THost;
 	inputDebugElement: DebugElement;
-	directive: ErrorTooltipDirective;
-	setErrors: (errors: any) => Promise<void>;
-	getFormDir: () => FormGroupDirective;
+	directive: ErrorTooltipSigDirective;
+	setErrors: (errors: any[] | null) => Promise<void>;
 	installFakeTooltipLifecycle: () => {
 		setInputMock: jest.Mock;
 		fakeComponentRef: any;
@@ -180,26 +190,22 @@ async function setupHarness<THost>(
 }> {
 	await TestBed.configureTestingModule({
 		declarations: [hostType],
-		imports: [ErrorTooltipDirective, ReactiveFormsModule],
-		providers: [provideZonelessChangeDetection(), FormBuilder],
+		imports: [ErrorTooltipSigDirective],
+		providers: [provideZonelessChangeDetection()],
 	}).compileComponents();
 
 	const fixture = TestBed.createComponent(hostType);
 	const component = fixture.componentInstance;
 	fixture.detectChanges();
 
-	const inputDebugElement = fixture.debugElement.query(By.directive(ErrorTooltipDirective));
-	const directive = inputDebugElement.injector.get(ErrorTooltipDirective);
+	const inputDebugElement = fixture.debugElement.query(By.directive(ErrorTooltipSigDirective));
+	const directive = inputDebugElement.injector.get(ErrorTooltipSigDirective);
 
-	const setErrors = async (errors: any) => {
-		const anyHost: any = component as any;
-		anyHost.form.get('name')!.setErrors(errors);
+	const setErrors = async (errors: any[] | null) => {
+		component.setErrors(errors);
 		fixture.detectChanges();
 		await flush2();
 	};
-
-	const getFormDir = () =>
-		fixture.debugElement.query(By.directive(FormGroupDirective)).injector.get(FormGroupDirective);
 
 	const installFakeTooltipLifecycle = () => {
 		const raf = mockAsyncRaf();
@@ -218,15 +224,15 @@ async function setupHarness<THost>(
 		return { setInputMock, fakeComponentRef, appendSpy, raf };
 	};
 
-	return { fixture, component, inputDebugElement, directive, setErrors, getFormDir, installFakeTooltipLifecycle };
+	return { fixture, component, inputDebugElement, directive, setErrors, installFakeTooltipLifecycle };
 }
 
 /* ======================================================================================
    SUITE A: explicit [placement] exists => placement must NOT change via options
 ====================================================================================== */
-describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host WITH explicit placement binding', () => {
+describe('ErrorTooltipSigDirective (signals forms, zoneless) — host WITH explicit placement binding', () => {
 	it('should merge options correctly on initialization', async () => {
-		const { directive } = await setupHarness(HostWithExplicitPlacementComponent);
+		const { directive } = await setupHarness(HostSigWithExplicitPlacementComponent);
 		const merged = (directive as any).mergedOptions() as ErrorTooltipOptions;
 
 		expect(merged.placement).toBe('top');
@@ -240,21 +246,22 @@ describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host WITH e
 
 	it('should prefer explicit input bindings over options object and defaults', async () => {
 		await TestBed.configureTestingModule({
-			declarations: [HostWithExplicitPlacementComponent],
-			imports: [ErrorTooltipDirective, ReactiveFormsModule],
-			providers: [provideZonelessChangeDetection(), FormBuilder],
+			declarations: [HostSigWithExplicitPlacementComponent],
+			imports: [ErrorTooltipSigDirective],
+			providers: [provideZonelessChangeDetection()],
 		}).compileComponents();
 
-		const fixture = TestBed.createComponent(HostWithExplicitPlacementComponent);
+		const fixture = TestBed.createComponent(HostSigWithExplicitPlacementComponent);
 		const component = fixture.componentInstance;
 
-		(component as any).options.set({ placement: 'top', zIndex: 1234 });
-		component.placement = 'left' as any; // set before first detectChanges
+		component.placement = 'left' as any;
+		component.options.set({ placement: 'top', zIndex: 1234 });
 
 		fixture.detectChanges();
+		await flush2();
 
-		const inputDebugElement = fixture.debugElement.query(By.directive(ErrorTooltipDirective));
-		const directive = inputDebugElement.injector.get(ErrorTooltipDirective);
+		const inputDebugElement = fixture.debugElement.query(By.directive(ErrorTooltipSigDirective));
+		const directive = inputDebugElement.injector.get(ErrorTooltipSigDirective);
 
 		const merged = (directive as any).mergedOptions() as ErrorTooltipOptions;
 
@@ -264,9 +271,10 @@ describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host WITH e
 	});
 
 	it('should create and attach tooltip component when showErrorTooltip is called and errors exist', async () => {
-		const { directive, setErrors, installFakeTooltipLifecycle } = await setupHarness(HostWithExplicitPlacementComponent);
+		const { directive, setErrors, installFakeTooltipLifecycle } =
+			await setupHarness(HostSigWithExplicitPlacementComponent);
 
-		await setErrors({ required: 'E1' });
+		await setErrors([{ message: 'E1' }]);
 
 		const { setInputMock, fakeComponentRef, appendSpy, raf } = installFakeTooltipLifecycle();
 
@@ -289,100 +297,80 @@ describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host WITH e
 	});
 
 	it('should call displayTooltip when errors exist', async () => {
-		const { directive, setErrors } = await setupHarness(HostWithExplicitPlacementComponent);
+		const { directive, setErrors } = await setupHarness(HostSigWithExplicitPlacementComponent);
 
 		const spy = jest.spyOn(directive as any, 'displayTooltip').mockImplementation(() => {});
-		await setErrors({ required: 'Error' });
+		await setErrors([{ message: 'E1' }]);
 
 		directive.showErrorTooltip();
 		expect(spy).toHaveBeenCalledTimes(1);
 	});
 
 	it('should NOT call displayTooltip when no errors exist', async () => {
-		const { directive, setErrors } = await setupHarness(HostWithExplicitPlacementComponent);
+		const { directive, setErrors } = await setupHarness(HostSigWithExplicitPlacementComponent);
 
 		const spy = jest.spyOn(directive as any, 'displayTooltip').mockImplementation(() => {});
-		await setErrors(null);
+		await setErrors([]);
 
 		directive.showErrorTooltip();
 		expect(spy).not.toHaveBeenCalled();
 	});
 
-	it('should flatten all errors when showFirstErrorOnly = false', async () => {
-		const { directive, fixture, component, setErrors } = await setupHarness(HostWithExplicitPlacementComponent);
-
-		(component as any).options.set({ ...defaultOptions, showFirstErrorOnly: false });
-		fixture.detectChanges();
-		await flush2();
-
-		await setErrors({
-			arr: [{ text: 'E1' }, { text: 'E2' }],
-			str: 'E3',
-			num: 123,
-		});
-
-		const payloads = (directive as any).errorPayloads() as any[];
-		expect(payloads).toEqual(['E1', 'E2', 'E3']);
-	});
-
 	it('should return only first error when showFirstErrorOnly = true', async () => {
-		const { directive, fixture, component, setErrors } = await setupHarness(HostWithExplicitPlacementComponent);
+		const { directive, fixture, component, setErrors } =
+			await setupHarness(HostSigWithExplicitPlacementComponent);
 
-		(component as any).options.set({ ...defaultOptions, showFirstErrorOnly: true });
+		component.options.set({ ...defaultOptions, showFirstErrorOnly: true } as any);
 		fixture.detectChanges();
 		await flush2();
 
-		await setErrors({
-			arr: [{ text: 'E1' }, { text: 'E2' }],
-			str: 'E3',
-		});
+		await setErrors([{ message: 'E1' }, { message: 'E2' }]);
 
 		const payloads = (directive as any).errorPayloads() as any[];
 		expect(payloads).toEqual(['E1']);
 	});
 
-	it('should include TriLangText errors (and not filter them out)', async () => {
-		const { directive, fixture, component, setErrors } = await setupHarness(HostWithExplicitPlacementComponent);
+	it('should include TriLangText errors (i18n) and keep them as objects', async () => {
+		const { directive, fixture, component, setErrors } =
+			await setupHarness(HostSigWithExplicitPlacementComponent);
 
-		(component as any).options.set({ ...defaultOptions, showFirstErrorOnly: false });
+		component.options.set({ ...defaultOptions, showFirstErrorOnly: false } as any);
 		fixture.detectChanges();
 		await flush2();
 
 		const tri = { de: 'DE', fr: 'FR', en: 'EN' };
 
-		await setErrors({
-			required: tri,
-			passwordErrors: [{ text: tri }],
-			foo: 'E1',
-			num: 123,
-			obj: { any: 'thing' },
-		});
+		await setErrors([
+			{ message: 'i18n', i18n: tri },
+			{ message: 'E1' },
+			{ message: 'i18n', i18n: tri },
+		]);
 
 		const payloads = (directive as any).errorPayloads() as any[];
-		expect(payloads).toEqual([tri, tri, 'E1']);
+		expect(payloads).toEqual([tri, 'E1', tri]);
 	});
 
 	it('should update tooltip options when options change but keep placement from explicit input', async () => {
 		// Avoid NG0100: set placement before first detectChanges
 		await TestBed.configureTestingModule({
-			declarations: [HostWithExplicitPlacementComponent],
-			imports: [ErrorTooltipDirective, ReactiveFormsModule],
-			providers: [provideZonelessChangeDetection(), FormBuilder],
+			declarations: [HostSigWithExplicitPlacementComponent],
+			imports: [ErrorTooltipSigDirective],
+			providers: [provideZonelessChangeDetection()],
 		}).compileComponents();
 
-		const fixture = TestBed.createComponent(HostWithExplicitPlacementComponent);
+		const fixture = TestBed.createComponent(HostSigWithExplicitPlacementComponent);
 		const component = fixture.componentInstance;
 
 		component.placement = 'right';
-		(component as any).options.set({ placement: 'top', zIndex: 2000 });
+		component.options.set({ placement: 'top', zIndex: 2000 });
 
 		fixture.detectChanges();
 		await flush2();
 
-		const inputDebugElement = fixture.debugElement.query(By.directive(ErrorTooltipDirective));
-		const directive = inputDebugElement.injector.get(ErrorTooltipDirective);
+		const inputDebugElement = fixture.debugElement.query(By.directive(ErrorTooltipSigDirective));
+		const directive = inputDebugElement.injector.get(ErrorTooltipSigDirective);
 
-		(component as any).form.get('name')!.setErrors({ required: 'E1' });
+		component.setErrors([{ message: 'E1' }]);
 		fixture.detectChanges();
 		await flush2();
 
@@ -398,7 +386,8 @@ describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host WITH e
 		directive.showErrorTooltip();
 		await flush2();
 
-		(component as any).options.set({ placement: 'bottom', zIndex: 1 });
+		// Update options: placement in options must NOT win
+		component.options.set({ placement: 'bottom', zIndex: 1 });
 		fixture.detectChanges();
 		await flush2();
 
@@ -407,42 +396,17 @@ describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host WITH e
 			.map(c => c[1] as ErrorTooltipOptions);
 
 		const last = optionCalls[optionCalls.length - 1];
-		expect(last.placement).toBe('right'); // explicit placement wins
+		expect(last.placement).toBe('right');
 		expect(last.zIndex).toBe(1);
 
 		appendSpy.mockRestore();
 		raf.restore();
 	});
 
-	it('should display tooltip on form submit if errors exist', async () => {
-		const { directive, setErrors, getFormDir } = await setupHarness(HostWithExplicitPlacementComponent);
-
-		const spy = jest.spyOn(directive as any, 'displayTooltip').mockImplementation(() => {});
-		await setErrors({ required: 'Required' });
-
-		getFormDir().ngSubmit.emit();
-		await flush2();
-
-		expect(spy).toHaveBeenCalledTimes(1);
-	});
-
-	it('should NOT show tooltip on form submit when control has no errors', async () => {
-		const { directive, setErrors, getFormDir } = await setupHarness(HostWithExplicitPlacementComponent);
-
-		const spy = jest.spyOn(directive as any, 'displayTooltip').mockImplementation(() => {});
-		await setErrors(null);
-
-		getFormDir().ngSubmit.emit();
-		await flush2();
-
-		expect(spy).not.toHaveBeenCalled();
-	});
-
 	it('should destroy tooltip component correctly', async () => {
-		const { directive } = await setupHarness(HostWithExplicitPlacementComponent);
+		const { directive } = await setupHarness(HostSigWithExplicitPlacementComponent);
 
 		const destroyMock = jest.fn();
-		const nextSpy = jest.spyOn((directive as any).tooltipDestroyed$, 'next');
 
 		(directive as any).refToTooltip.set({
 			instance: {},
@@ -455,7 +419,6 @@ describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host WITH e
 
 		(directive as any).destroyTooltip();
 
-		expect(nextSpy).toHaveBeenCalled();
 		expect(destroyMock).toHaveBeenCalled();
 		expect((directive as any).refToTooltip()).toBeNull();
 		expect((directive as any).isTooltipVisible()).toBe(false);
@@ -463,7 +426,7 @@ describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host WITH e
 	});
 
 	it('should safely handle destroyTooltip when no tooltip exists', async () => {
-		const { directive } = await setupHarness(HostWithExplicitPlacementComponent);
+		const { directive } = await setupHarness(HostSigWithExplicitPlacementComponent);
 
 		(directive as any).refToTooltip.set(null);
 		expect(() => (directive as any).destroyTooltip()).not.toThrow();
@@ -473,25 +436,21 @@ describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host WITH e
 /* ======================================================================================
    SUITE B: NO explicit [placement] => placement must change via options
 ====================================================================================== */
-describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host OPTIONS ONLY (no explicit placement binding)', () => {
+describe('ErrorTooltipSigDirective (signals forms, zoneless) — host OPTIONS ONLY (no explicit placement binding)', () => {
 	it('should update tooltip placement when options change (no explicit placement binding)', async () => {
-		const { fixture, component, directive, setErrors } = await setupHarness(HostOptionsOnlyComponent);
+		const { fixture, component, directive, setErrors, installFakeTooltipLifecycle } =
+			await setupHarness(HostSigOptionsOnlyComponent);
 
-		await setErrors({ required: 'E1' });
+		await setErrors([{ message: 'E1' }]);
 
-		const raf = mockAsyncRaf();
-		const { fakeComponentRef, setInputMock } = makeFakeTooltipRef();
-		jest.spyOn(document.body, 'appendChild');
+		const { setInputMock, raf } = installFakeTooltipLifecycle();
 
-		(directive as any).setupTooltipComponent = () => {
-			(directive as any).refToTooltip.set(fakeComponentRef);
-			document.body.appendChild(fakeComponentRef.location.nativeElement);
-		};
-
+		// Create tooltip
 		directive.showErrorTooltip();
 		await flush2();
 
-		(component as any).options.set({ placement: 'bottom', zIndex: 1 });
+		// Change options: placement should now update because there's no explicit placement input
+		component.options.set({ placement: 'bottom', zIndex: 1 });
 		fixture.detectChanges();
 		await flush2();
 

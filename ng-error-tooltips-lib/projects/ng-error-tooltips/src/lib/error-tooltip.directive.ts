@@ -1,7 +1,7 @@
-import { ComponentRef, Directive, ElementRef, EnvironmentInjector, inject, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewContainerRef } from '@angular/core';
+import { ComponentRef, computed, Directive, effect, ElementRef, EnvironmentInjector, inject, input, OnDestroy, signal, ViewContainerRef } from '@angular/core';
 import { ControlContainer, FormGroupDirective, NgControl } from '@angular/forms';
-
 import { Subject, filter, fromEvent, interval, merge, race, takeUntil, tap } from 'rxjs';
+
 import { Placement } from './tooltip/placement.type';
 import { ErrorPayload } from './error-payload.type';
 import { isTriLangText } from './validators/error-messages.const';
@@ -9,267 +9,69 @@ import { defaultOptions } from './options/default-options.const';
 import { ErrorTooltipOptions } from './options/error-tooltip-options.interface';
 import { NgErrorTooltipComponent } from './tooltip/ng-error-tooltip.component';
 
-
 @Directive({
-	selector: '[ngErrorTooltip]'
+  selector: '[ngErrorTooltip]',
+  standalone: true,
 })
-
-export class ErrorTooltipDirective implements OnInit, OnDestroy, OnChanges {
-	private readonly formControlRef = inject<ElementRef<HTMLElement>>(ElementRef);
+export class ErrorTooltipDirective implements OnDestroy {
+	private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
 	private readonly viewContainerRef = inject(ViewContainerRef);
-	private readonly injector = inject(EnvironmentInjector);
-	private readonly controlContainer = inject(ControlContainer);
+	private readonly envInjector = inject(EnvironmentInjector);
+	private readonly controlContainer = inject(ControlContainer, { optional: true });
 	private readonly ngControl = inject(NgControl, { self: true, optional: true });
 
-	// A merge of all options that were passed in various ways:
-	private mergedOptions!: ErrorTooltipOptions;
+	// ---- inputs (signals) ----
+	readonly options = input<ErrorTooltipOptions>({});
+	readonly id = input<string | number | null>(null);
+	readonly showFirstErrorOnly = input<boolean | null>(null);
+	readonly placement = input<Placement | null>(null);
+	readonly zIndex = input<number | null>(null);
+	readonly tooltipClass = input<string | null>(null);
+	readonly shadow = input<boolean | null>(null);
+	readonly offset = input<number | null>(null);
+	readonly width = input<string | null>(null);
+	readonly maxWidth = input<string | null>(null);
+	readonly pointerEvents = input<'auto' | 'none' | null>(null);
 
-	// Will contain all options collected from the @Inputs
-	private collectedOptions: Partial<ErrorTooltipOptions> = {};
+	private readonly mergedOptions = computed<ErrorTooltipOptions>(() => (
+		{
+		...defaultOptions,
+		...this.options(),
+		...(this.id() != null ? { id: this.id()! } : {}),
+		...(this.showFirstErrorOnly() != null ? { showFirstErrorOnly: this.showFirstErrorOnly()! } : {}),
+		...(this.placement() != null ? { placement: this.placement()! } : {}),
+		...(this.zIndex() != null ? { zIndex: this.zIndex()! } : {}),
+		...(this.tooltipClass() != null ? { tooltipClass: this.tooltipClass()! } : {}),
+		...(this.shadow() != null ? { shadow: this.shadow()! } : {}),
+		...(this.offset() != null ? { offset: this.offset()! } : {}),
+		...(this.width() != null ? { width: this.width()! } : {}),
+		...(this.maxWidth() != null ? { maxWidth: this.maxWidth()! } : {}),
+		...(this.pointerEvents() != null ? { pointerEvents: this.pointerEvents()! } : {}),
+	}));
 
-	// Pass options as a single object:
-	@Input()
-	options: ErrorTooltipOptions = {};
+	// ---- internal state ----
+	private refToTooltip = signal<ComponentRef<NgErrorTooltipComponent> | null>(null);
+	private tooltipComponent = computed(() => this.refToTooltip()?.instance ?? null);
+	private formControlPosition = signal<DOMRect | null>(null);
+	private isTooltipVisible = signal<boolean>(false);
 
+	// Bridge signal: triggers recomputation when reactive forms state changes
+	private readonly controlTick = signal(0);
 
-	@Input()
-	set id(val: string | number) {
-	  	this.collectedOptions.id = val;
-	}
+	private readonly destroyAll$ = new Subject<void>();
+	private readonly tooltipDestroyed$ = new Subject<void>();
 
-	@Input()
-	set showFirstErrorOnly(val: boolean) {
-	  	this.collectedOptions.showFirstErrorOnly = val;
-	}
+	private readonly errorPayloads = computed<ErrorPayload[]>(() => {
+		// <-- the important part: depend on controlTick()
+		this.controlTick();
 
-	@Input()
-	set placement(val: Placement) {
-	  	this.collectedOptions.placement = val;
-	}
-
-	@Input()
-	set zIndex(val: number) {
-	  	this.collectedOptions.zIndex = val;
-	}
-
-	@Input()
-	set tooltipClass(val: string) {
-	 	this.collectedOptions.tooltipClass = val;
-	}
-
-	@Input()
-	set shadow(val: boolean) {
-	 	this.collectedOptions.shadow = val;
-	}
-
-	@Input()
-	set offset(val: number) {
-		this.collectedOptions.offset = val;
-	}
-
-	@Input()
-	set width(val: string) {
-	  	this.collectedOptions.width = val;
-	}
-
-	@Input()
-	set maxWidth(val: string) {
-	 	this.collectedOptions.maxWidth = val;
-	}
-
-	@Input()
-	set pointerEvents(val: 'auto' | 'none') {
-	  	this.collectedOptions.pointerEvents = val;
-	}
-
-
-	private formControlPosition: DOMRect | undefined;
-	private refToTooltipComponent: ComponentRef<NgErrorTooltipComponent> | undefined;
-	private tooltipComponent: NgErrorTooltipComponent | undefined;
-
-	private lastOptionsKey = '';
-
-	private isTooltipCreated = false;
-
-	private tooltipDestroyed$ = new Subject<void>();
-	private destroyAll$ = new Subject<void>();
-
-
-	ngOnInit(): void {
-
-		// Map tooltip-options:
-    	this.mergedOptions = this.getMergedTooltipOptions();
-		this.lastOptionsKey = JSON.stringify(this.mergedOptions);
-
-		// Update tooltip 'on submit':
-		this.handleTooltipVisibilityOnFormSubmission();
-	}
-
-	ngOnChanges(_: SimpleChanges) {
-    	// Map tooltip options:
-    	const merged = this.getMergedTooltipOptions();
-		const key = JSON.stringify(merged);
-
-		if (key !== this.lastOptionsKey && this.refToTooltipComponent) {
-			this.mergedOptions = merged;
-			this.lastOptionsKey = key;
-			this.refToTooltipComponent.setInput('options', this.mergedOptions);
-		}	
-    }
-
-	/** Public User-Methods **/
-
-	public showErrorTooltip() {
-		if (this.getErrorPayloads().length > 0) {
-			this.displayTooltip();
-		}
-	}
-
-	public hideErrorTooltip() {
-		this.destroyTooltip();
-	}
-
-
-	/** Private library-Methods **/
-
-	private getMergedTooltipOptions(): ErrorTooltipOptions {
-    	// Merge options: the priority order is as follows:
-		// 1. Individual options passed via @Input
-		// 2. The options-object passed via @Input
-		// 3. The default options
-    	return Object.assign({}, defaultOptions, this.options, this.collectedOptions);
-	}
-
-	/** Listeners **/
-
-	private attachListeners(tooltipComponent: NgErrorTooltipComponent, formControlRef: ElementRef<any>) {
-		// Listens to interactions with the tooltip or the form control:
-		this.listenToUserInteraction(tooltipComponent, formControlRef);
-
-		// Listens for changes in the position of the form control element to which the tooltip is attached:
-		this.listenForPositionChangesOfFormControl();
-	}
-
-
-	/* Handles interactions to hide the tooltip */
-	private listenToUserInteraction(tooltipComponent: NgErrorTooltipComponent, formControlRef: ElementRef<any>): void {
-		const clickOnTooltip$ = tooltipComponent.userClickOnTooltip$;
-		const focusOnFormControl$ = fromEvent(formControlRef.nativeElement, 'focusin'); // Handles tab navigation
-		const pointerDownOnFormControl$ = fromEvent(formControlRef.nativeElement, 'pointerdown'); // Handles mouse and touch input
-
-		race(clickOnTooltip$, pointerDownOnFormControl$, focusOnFormControl$)
-			.pipe(
-				filter(() => this.isTooltipCreated && !!this.tooltipComponent),
-				tap(() => this.destroyTooltip()),
-				takeUntil(merge(this.tooltipDestroyed$, this.destroyAll$))
-			)
-			.subscribe();
-	}
-
-	/* Listens for changes in the position of the form control element by periodically checking its position every 300ms. */
-	/* If the position changes, and the tooltip is visible, it updates the position of the tooltip accordingly. */
-	/* Needs to be active while tooltip is visible */
-	private listenForPositionChangesOfFormControl() {
-		interval(300)
-			.pipe(
-				tap(() => {
-					const newPos = this.getFormControlPosition();
-					const hasPosChanged = this.isTooltipCreated && !!this.tooltipComponent && !!this.formControlPosition &&
-						(this.formControlPosition!.top !== newPos.top || this.formControlPosition!.left !== newPos.left);
-
-					if (hasPosChanged && this.tooltipComponent) {
-						this.formControlPosition = newPos;
-						this.tooltipComponent.setVisibilityAndPosition(this.formControlRef);
-					}
-				}),
-				takeUntil(merge(this.tooltipDestroyed$, this.destroyAll$))
-			)
-			.subscribe();
-	}
-
-	/* Needs to be active throughout the lifespan of this directive */
-	private handleTooltipVisibilityOnFormSubmission() {
-		// Check if parent Form is accessible:
-		if (this.controlContainer?.control) {
-			const parentDirective = this.controlContainer.formDirective as FormGroupDirective;
-
-			// Reacts to 'on submit' of the parent-form:
-			parentDirective.ngSubmit
-				.pipe(
-					tap(() => {
-						const formHasErrors = !!this.ngControl?.errors;
-						if (formHasErrors) {
-							this.displayTooltip();
-						}
-					}),
-					takeUntil(this.destroyAll$)
-				)
-				.subscribe();
-		}
-	}
-
-	private displayTooltip(): void {
-		// Make sure there is no existing tooltip before showing a new one:
-		this.destroyTooltip();
-		// Instantiate the tooltip, pass the options/error-message, attach listeners and add it to the DOM:
-		this.setupTooltipComponent();
-
-		// Wait for formControlRef.nativeElement to be visible and trigger the tooltip to show:
-		requestAnimationFrame(() => {
-			this.formControlPosition = this.getFormControlPosition();
-
-			if (this.tooltipComponent) {
-				this.tooltipComponent.showTooltip(this.formControlRef);
-				this.isTooltipCreated = true;
-			}
-		});
-	}
-
-	private setupTooltipComponent(): void {
-    	// Create the component using the ViewContainerRef.
-    	// This way the component is automatically added to the change detection cycle of the Angular application
-    	const ref = this.viewContainerRef.createComponent(NgErrorTooltipComponent, { injector: this.injector });
-		this.refToTooltipComponent = ref;
-    	this.tooltipComponent = ref.instance;
-
-		// Set the data property of the component instance in a way that ngOnChanges is triggered:
-		ref.setInput('errors', this.getErrorPayloads());
-		ref.setInput('options', this.mergedOptions);
-		ref.setInput('formControl', this.formControlRef.nativeElement);
-
-		this.attachListeners(this.tooltipComponent, this.formControlRef);
-
-    	// Get the DOM element from the component's view.
-    	const domElemTooltip = (ref.location.nativeElement as HTMLElement);
-
-    	// Append the DOM element to the document body.
-    	document.body.appendChild(domElemTooltip);
-	}
-
-	private destroyTooltip(): void {
-		this.tooltipDestroyed$?.next();
-		this.refToTooltipComponent?.destroy();
-		this.isTooltipCreated = false;
-		this.tooltipComponent = undefined;
-		this.refToTooltipComponent = undefined;
-	}
-
-	private getFormControlPosition(): DOMRect {
-		return this.formControlRef.nativeElement.getBoundingClientRect();
-	}
-
-	private getErrorPayloads(): ErrorPayload[] {
 		const entries = Object.entries(this.ngControl?.errors ?? {}) as Array<[string, unknown]>;
 
 		const errors = entries.reduce<ErrorPayload[]>((acc, [, err]) => {
-			
-			// for passwordErrors: [{ text: string | TriLangText }]
 			if (Array.isArray(err)) {
 				for (const e of err as any[]) {
-					const t = e?.text;
-					if (typeof t === 'string' || isTriLangText(t)) {
-						acc.push(t);
-					}
+				const t = e?.text;
+				if (typeof t === 'string' || isTriLangText(t)) acc.push(t);
 				}
 				return acc;
 			}
@@ -281,13 +83,155 @@ export class ErrorTooltipDirective implements OnInit, OnDestroy, OnChanges {
 			return acc;
 		}, []);
 
-		return this.mergedOptions.showFirstErrorOnly && errors.length > 1 ? [errors[0]] : errors;
+		const { showFirstErrorOnly } = this.mergedOptions();
+		return showFirstErrorOnly && errors.length > 1 ? [errors[0]] : errors;
+	});
+
+	constructor() {
+		// Keep tooltip inputs in sync (only if tooltip exists)
+		effect(() => {
+
+			// Always read these so the effect tracks them as dependencies
+			const opts = this.mergedOptions();
+			const errs = this.errorPayloads();
+			const host = this.hostEl.nativeElement;			
+
+			const ref = this.refToTooltip();
+			if (!ref) { return; }
+
+			ref.setInput('options', opts);
+			ref.setInput('errors', errs);
+			ref.setInput('formControl', host);
+
+			// Re-position if visible (placement/offset changes need it)
+			const comp = this.tooltipComponent();
+			if (this.isTooltipVisible() && comp) {
+				comp.showTooltip(this.hostEl);
+			}
+		});
+	}
+
+	ngOnInit(): void {
+		// Bridge Rx -> Signal
+		const ctrl = this.ngControl?.control;
+		if (ctrl) {
+			merge(ctrl.statusChanges ?? [], ctrl.valueChanges ?? [])
+				.pipe(
+					tap(() => this.controlTick.update(x => x + 1)),
+					takeUntil(this.destroyAll$)
+				)
+				.subscribe();
+		}
+
+		// One-time: listen to parent form submit (lifetime listener)
+		this.handleTooltipVisibilityOnFormSubmission();
+	}
+
+	/** Public API **/
+	public showErrorTooltip(): void {
+		// Ensure we read fresh errors (in case submit just happened)
+		if (this.errorPayloads().length > 0) { this.displayTooltip(); }
+	}
+
+	public hideErrorTooltip(): void {
+		this.destroyTooltip();
+	}
+
+	/** Submit listener **/
+	private handleTooltipVisibilityOnFormSubmission(): void {
+		const parent = this.controlContainer?.control ? (this.controlContainer.formDirective as FormGroupDirective) : null;
+		if (!parent) { return; }
+
+		parent.ngSubmit
+			.pipe(
+				tap(() => {
+					// bump tick to pick up touched/validation updates that happened during submit
+					this.controlTick.update(x => x + 1);
+
+					if (this.errorPayloads().length > 0) { this.displayTooltip(); }
+				}),
+				takeUntil(this.destroyAll$)
+			)
+			.subscribe();
+	}
+
+	/** Tooltip lifecycle **/
+	private displayTooltip(): void {
+		this.destroyTooltip();
+		this.setupTooltipComponent();
+
+		requestAnimationFrame(() => {
+			this.formControlPosition.set(this.getFormControlPosition());
+			this.tooltipComponent()?.showTooltip(this.hostEl);
+			this.isTooltipVisible.set(true);
+		});
+	}
+
+	private setupTooltipComponent(): void {
+		const ref = this.viewContainerRef.createComponent(NgErrorTooltipComponent, {
+			// EnvironmentInjector is the correct one for standalone components
+			environmentInjector: this.envInjector });
+
+		this.refToTooltip.set(ref);
+
+		const comp = this.tooltipComponent();
+		if (!comp) { return; }
+
+		this.attachListeners(comp);
+		document.body.appendChild(ref.location.nativeElement as HTMLElement);
+	}
+
+	private attachListeners(tooltipComponent: NgErrorTooltipComponent): void {
+		const clickOnTooltip$ = tooltipComponent.userClickOnTooltip$;
+		const focusOnHost$ = fromEvent(this.hostEl.nativeElement, 'focusin');
+		const pointerDownOnHost$ = fromEvent(this.hostEl.nativeElement, 'pointerdown');
+
+		race(clickOnTooltip$, pointerDownOnHost$, focusOnHost$)
+			.pipe(
+				filter(() => this.isTooltipVisible() && !!this.tooltipComponent()),
+				tap(() => this.destroyTooltip()),
+				takeUntil(merge(this.tooltipDestroyed$, this.destroyAll$))
+			)
+			.subscribe();
+
+		interval(300)
+			.pipe(
+				tap(() => {
+				const newPos = this.getFormControlPosition();
+				const oldPos = this.formControlPosition();
+
+				const hasPosChanged =
+					this.isTooltipVisible() &&
+					!!this.tooltipComponent() &&
+					!!oldPos &&
+					(oldPos.top !== newPos.top || oldPos.left !== newPos.left);
+
+				if (hasPosChanged) {
+					this.formControlPosition.set(newPos);
+					this.tooltipComponent()?.setVisibilityAndPosition(this.hostEl);
+				}
+				}),
+				takeUntil(merge(this.tooltipDestroyed$, this.destroyAll$))
+			)
+			.subscribe();
+	}
+
+	private destroyTooltip(): void {
+		this.tooltipDestroyed$.next();
+		this.refToTooltip()?.destroy();
+		this.refToTooltip.set(null);
+		this.isTooltipVisible.set(false);
+		this.formControlPosition.set(null);
+	}
+
+	private getFormControlPosition(): DOMRect {
+		return this.hostEl.nativeElement.getBoundingClientRect();
 	}
 
 	ngOnDestroy(): void {
 		this.destroyTooltip();
 		this.destroyAll$.next();
-		this.destroyAll$.unsubscribe();
-		this.tooltipDestroyed$.unsubscribe();
+		this.destroyAll$.complete();
+		this.tooltipDestroyed$.complete();
 	}
 }

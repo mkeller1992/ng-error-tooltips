@@ -11,7 +11,7 @@ import { NgErrorTooltipComponent } from './tooltip/ng-error-tooltip.component';
 
 @Directive({
   selector: '[ngErrorTooltip]',
-  standalone: true,
+  standalone: true
 })
 export class ErrorTooltipDirective implements OnDestroy {
 	private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);

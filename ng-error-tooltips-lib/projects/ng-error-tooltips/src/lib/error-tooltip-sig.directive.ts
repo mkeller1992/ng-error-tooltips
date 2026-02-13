@@ -14,7 +14,8 @@ type SignalFormField = {
 };
 
 @Directive({
-	selector: '[ngErrorTooltipSig]'
+	selector: '[ngErrorTooltipSig]',
+	standalone: true
 })
 
 export class ErrorTooltipSigDirective implements OnDestroy {

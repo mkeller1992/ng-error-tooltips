@@ -4,11 +4,9 @@ import { TriLangText } from './tri-lang-text.type';
 import { inject, Injectable } from '@angular/core';
 import { ERROR_TOOLTIP_SIG_VALIDATE } from '../error-tooltip-sig-validate.token';
 
-@Injectable(
-	{ providedIn: 'root' }
-)
+@Injectable({ providedIn: 'root' })
 export class CustomSigValidators {
-	private readonly validate = inject(	ERROR_TOOLTIP_SIG_VALIDATE);
+	private readonly validate = inject(ERROR_TOOLTIP_SIG_VALIDATE);
 
 	required(path: SchemaPath<any>, errorMessage?: string): void {
 		this.validate(path, (ctx) => {
@@ -22,14 +20,14 @@ export class CustomSigValidators {
 		});
 	}
 
-	trueRequired(path: SchemaPath<boolean>, errorMessage?: string): void {
+	trueRequired(path: SchemaPath<boolean | null | undefined>, errorMessage?: string): void {
 		this.validate(path, (ctx) => {
 			const msg = errorMessage ?? ERROR_MESSAGES.trueRequired.de();
 			return ctx.value() === true ? undefined : { kind: 'trueRequired', message: msg };
 		});
 	}
 
-	minLength(path: SchemaPath<string>, minLength: number, errorMessage?: string): void {
+	minLength(path: SchemaPath<string | null | undefined>, minLength: number, errorMessage?: string): void {
 		this.validate(path, (ctx) => {
 			const errorMsg = errorMessage ?? ERROR_MESSAGES.minLength.de(minLength);
 			const value = ctx.value();
@@ -39,7 +37,7 @@ export class CustomSigValidators {
 		});
 	}
 
-	maxLength(path: SchemaPath<string>, maxLength: number, errorMessage?: string): void {
+	maxLength(path: SchemaPath<string | null | undefined>, maxLength: number, errorMessage?: string): void {
 		this.validate(path, (ctx) => {
 			const errorMsg = errorMessage ?? ERROR_MESSAGES.maxLength.de(maxLength);
 			const value = ctx.value();
@@ -176,16 +174,21 @@ export class CustomSigValidators {
 		});
 	}
 
-	lettersOnly(path: SchemaPath<string>, errorMessage?: string): void {
+	lettersOnly(path: SchemaPath<string | null | undefined>, errorMessage?: string): void {
 		this.validate(path, (ctx) => {
 			const errorMsg = errorMessage ?? ERROR_MESSAGES.lettersOnly.de();
 			const regex = new RegExp('^[A-Za-zÀ-ÖØ-öø-ÿ ]*$');
-			const isValid = regex.test(ctx.value());
+			const value = ctx.value();
+
+			// Skip validation for null, undefined, or empty string (keep behaviour consistent with other optional validators)
+			if (value === null || value === undefined || value === '') return undefined;
+
+			const isValid = regex.test(value);
 			return isValid ? undefined : { kind: 'lettersOnly', message: errorMsg };
 		});
 	}
 
-	email(path: SchemaPath<string>, errorMessage?: string): void {
+	email(path: SchemaPath<string | null | undefined>, errorMessage?: string): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 
@@ -205,9 +208,14 @@ export class CustomSigValidators {
 
 	/* Can show *MULTIPLE* errors at once: */
 
-	passwordErrors(path: SchemaPath<string>, minLength: number, minDigits: number, minCapitalLetters: number): void {
+	passwordErrors(
+		path: SchemaPath<string | null | undefined>,
+		minLength: number,
+		minDigits: number,
+		minCapitalLetters: number
+	): void {
 		this.validate(path, (ctx) => {
-			const value = ctx.value();
+			const value = ctx.value() ?? '';
 
 			const isEmpty = !value.length;
 			const violatesMinLength = isEmpty || value.length < minLength;
@@ -229,7 +237,7 @@ export class CustomSigValidators {
 		});
 	}
 
-	regexPattern(path: SchemaPath<string>, pattern: RegExp, errorMessage: string): void {
+	regexPattern(path: SchemaPath<string | null | undefined>, pattern: RegExp, errorMessage: string): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 
@@ -253,14 +261,14 @@ export class CustomSigValidators {
 		});
 	}
 
-	trueRequiredI18n(path: SchemaPath<boolean>, errorMessage?: TriLangText): void {
+	trueRequiredI18n(path: SchemaPath<boolean | null | undefined>, errorMessage?: TriLangText): void {
 		this.validate(path, (ctx) => {
 			const msg = errorMessage ?? tri('trueRequired');
 			return ctx.value() === true ? undefined : { kind: 'trueRequired', message: 'i18n', i18n: msg };
 		});
 	}
 
-	minLengthI18n(path: SchemaPath<string>, minLength: number, errorMessage?: TriLangText): void {
+	minLengthI18n(path: SchemaPath<string | null | undefined>, minLength: number, errorMessage?: TriLangText): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 			if (!value) return undefined; // keep legacy behaviour
@@ -269,7 +277,7 @@ export class CustomSigValidators {
 		});
 	}
 
-	maxLengthI18n(path: SchemaPath<string>, maxLength: number, errorMessage?: TriLangText): void {
+	maxLengthI18n(path: SchemaPath<string | null | undefined>, maxLength: number, errorMessage?: TriLangText): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 			if (!value) return undefined; // keep legacy behaviour
@@ -362,16 +370,20 @@ export class CustomSigValidators {
 		});
 	}
 
-	lettersOnlyI18n(path: SchemaPath<string>, errorMessage?: TriLangText): void {
+	lettersOnlyI18n(path: SchemaPath<string | null | undefined>, errorMessage?: TriLangText): void {
 		this.validate(path, (ctx) => {
 			const msg = errorMessage ?? tri('lettersOnly');
 			const regex = new RegExp('^[A-Za-zÀ-ÖØ-öø-ÿ ]*$');
-			const isValid = regex.test(ctx.value());
+			const value = ctx.value();
+
+			if (value === null || value === undefined || value === '') return undefined;
+
+			const isValid = regex.test(value);
 			return isValid ? undefined : { kind: 'lettersOnly', message: 'i18n', i18n: msg };
 		});
 	}
 
-	emailI18n(path: SchemaPath<string>, errorMessage?: TriLangText): void {
+	emailI18n(path: SchemaPath<string | null | undefined>, errorMessage?: TriLangText): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 
@@ -391,35 +403,35 @@ export class CustomSigValidators {
 	/* Can show MULTIPLE errors at once (i18n variant): */
 
 	passwordErrorsI18n(
-		path: SchemaPath<string>,
+		path: SchemaPath<string | null | undefined>,
 		minLength: number,
 		minDigits: number,
 		minCapitalLetters: number
 	): void {
 		this.validate(path, (ctx) => {
-		const value = ctx.value();
-		const isEmpty = !value?.length;
+			const value = ctx.value() ?? '';
+			const isEmpty = !value.length;
 
-		const violatesMinLength = isEmpty || value.length < minLength;
-		const violatesMinDigits = isEmpty || value.split('').filter((c: any) => !isNaN(c)).length < minDigits;
-		const violatesMinCapitalLetters =
-			isEmpty || value.split('').filter((c: any) => /^[A-Za-zÀ-ÖØ-öø-ÿ]*$/.test(c) && c === c.toUpperCase()).length < minCapitalLetters;
+			const violatesMinLength = isEmpty || value.length < minLength;
+			const violatesMinDigits = isEmpty || value.split('').filter((c: any) => !isNaN(c)).length < minDigits;
+			const violatesMinCapitalLetters =
+				isEmpty || value.split('').filter((c: any) => /^[A-Za-zÀ-ÖØ-öø-ÿ]*$/.test(c) && c === c.toUpperCase()).length < minCapitalLetters;
 
-		const errors = [
-			{ error: violatesMinLength, text: tri('minLength', minLength) },
-			{ error: violatesMinDigits, text: tri('minNumberOfDigits', minDigits) },
-			{ error: violatesMinCapitalLetters, text: tri('minNumberOfCapitalLetters', minCapitalLetters) },
-		];
+			const errors = [
+				{ error: violatesMinLength, text: tri('minLength', minLength) },
+				{ error: violatesMinDigits, text: tri('minNumberOfDigits', minDigits) },
+				{ error: violatesMinCapitalLetters, text: tri('minNumberOfCapitalLetters', minCapitalLetters) },
+			];
 
-		const errorsInFormControl = errors.filter(e => e.error === true);
+			const errorsInFormControl = errors.filter(e => e.error === true);
 
-		return errorsInFormControl.length
-			? errorsInFormControl.map(e => ({ kind: 'passwordErrors', message: 'i18n', i18n: e.text }))
-			: undefined;
+			return errorsInFormControl.length
+				? errorsInFormControl.map(e => ({ kind: 'passwordErrors', message: 'i18n', i18n: e.text }))
+				: undefined;
 		});
 	}
 
-	regexPatternI18n(path: SchemaPath<string>, pattern: RegExp, errorMessage: TriLangText): void {
+	regexPatternI18n(path: SchemaPath<string | null | undefined>, pattern: RegExp, errorMessage: TriLangText): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 
@@ -437,7 +449,7 @@ export class CustomSigValidators {
 		if (value == null) {
 			return true;
 		}
-		
+
 		if (typeof value === 'string') {
 			return value.trim().length === 0;
 		}
@@ -459,9 +471,8 @@ export class CustomSigValidators {
 		if (value === null || value === undefined || value === '') {
 			return null;
 		}
-		
+
 		const n = Number(value);
 		return Number.isNaN(n) ? null : n;
 	}
 }
-

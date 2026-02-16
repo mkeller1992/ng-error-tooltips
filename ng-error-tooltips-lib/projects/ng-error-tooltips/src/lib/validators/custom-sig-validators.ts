@@ -27,21 +27,23 @@ export class CustomSigValidators {
 		});
 	}
 
-	minLength(path: SchemaPath<string | null | undefined>, minLength: number, errorMessage?: string): void {
+	minLength(path: SchemaPath<string | number | null | undefined>, minLength: number, errorMessage?: string): void {
 		this.validate(path, (ctx) => {
 			const errorMsg = errorMessage ?? ERROR_MESSAGES.minLength.de(minLength);
 			const value = ctx.value();
-			return !!value && value.length < minLength
+			const str = value === null || value === undefined ? '' : String(value);
+			return !!str && str.length < minLength
 				? { kind: 'minLength', message: errorMsg }
 				: undefined;
 		});
 	}
 
-	maxLength(path: SchemaPath<string | null | undefined>, maxLength: number, errorMessage?: string): void {
+	maxLength(path: SchemaPath<string | number | null | undefined>, maxLength: number, errorMessage?: string): void {
 		this.validate(path, (ctx) => {
 			const errorMsg = errorMessage ?? ERROR_MESSAGES.maxLength.de(maxLength);
 			const value = ctx.value();
-			return !!value && value.length > maxLength
+			const str = value === null || value === undefined ? '' : String(value);
+			return !!str && str.length > maxLength
 				? { kind: 'maxLength', message: errorMsg }
 				: undefined;
 		});
@@ -268,21 +270,23 @@ export class CustomSigValidators {
 		});
 	}
 
-	minLengthI18n(path: SchemaPath<string | null | undefined>, minLength: number, errorMessage?: TriLangText): void {
+	minLengthI18n(path: SchemaPath<string | number | null | undefined>, minLength: number, errorMessage?: TriLangText): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
-			if (!value) return undefined; // keep legacy behaviour
+			if (!value) return undefined; // keep legacy behaviour (0 stays "empty", as before)
 			const msg = errorMessage ?? tri('minLength', minLength);
-			return value.length < minLength ? { kind: 'minLength', message: 'i18n', i18n: msg } : undefined;
+			const str = String(value);
+			return str.length < minLength ? { kind: 'minLength', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
-	maxLengthI18n(path: SchemaPath<string | null | undefined>, maxLength: number, errorMessage?: TriLangText): void {
+	maxLengthI18n(path: SchemaPath<string | number | null | undefined>, maxLength: number, errorMessage?: TriLangText): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
-			if (!value) return undefined; // keep legacy behaviour
+			if (!value) return undefined; // keep legacy behaviour (0 stays "empty", as before)
 			const msg = errorMessage ?? tri('maxLength', maxLength);
-			return value.length > maxLength ? { kind: 'maxLength', message: 'i18n', i18n: msg } : undefined;
+			const str = String(value);
+			return str.length > maxLength ? { kind: 'maxLength', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 

@@ -46,11 +46,7 @@ export class AppComponent implements OnInit {
   	private readonly employeeIdRegex = /^EMP-\d{4}$/;
 
   	// This is the "exception case": app provides all 3 translations itself.
-	private readonly employeeIdRegexMsg: TriLangText = {
-		de: 'Ungültige Personalnummer. Erwartet: «EMP-1234».',
-		fr: 'Numéro du personnel invalide. Attendu : «EMP-1234».',
-		en: 'Invalid employee ID. Expected: “EMP-1234”.',
-	};
+	private readonly employeeIdRegexMsg = signal<TriLangText | null>(null);
 
 	readonly employee = signal<Employee>({
 		nameInput: '',
@@ -76,7 +72,8 @@ export class AppComponent implements OnInit {
 		this.v.minLength(path.superior, 3)  // legacy (string)
 	});
 
-	ngOnInit(): void {
+	async ngOnInit(): Promise<void> {
+
 		this.formGroup = this.formBuilder.group({
 			nameInput: new FormControl<string>('', {
 				validators: [
@@ -98,12 +95,11 @@ export class AppComponent implements OnInit {
 			// Regex field: app-provided i18n message
 			employeeIdInput: new FormControl<string>('', {
 				validators: [
-					CustomValidators.requiredI18n(),
-					CustomValidators.regexPatternI18n(this.employeeIdRegex, this.employeeIdRegexMsg),
+					CustomValidators.requiredI18n()
 				],
 			}),
 
-			// ✅ Legacy validators: still work, but stay in German (or default)
+			// Legacy validators: still work, but stay in German (or default)
 			legacyNameInput: new FormControl<string>('', {
 				validators: [
 					CustomValidators.required(),     // legacy (string)
@@ -111,6 +107,28 @@ export class AppComponent implements OnInit {
 				],
 			}),
 		});
+
+		/* ASYNC ERROR MESSAGE EXAMPLE */
+
+		// Fetch tri-lang text async:
+		const asyncErrorMsg = await this.getEmployeeErrorMsg();
+
+		/* For SIGNAL FORMS */
+
+		this.employeeIdRegexMsg.set(asyncErrorMsg);
+
+		/* For REACTIVE FORMS */
+
+		// Add the regex validator AFTER the message arrived:
+		const employeeIdCtrl = this.formGroup.get('employeeIdInput');
+		if (employeeIdCtrl) {
+			employeeIdCtrl.addValidators([
+				CustomValidators.regexPatternI18n(this.employeeIdRegex, asyncErrorMsg as TriLangText),
+		]);
+
+		// Recompute validity, but don't spam valueChanges:
+		employeeIdCtrl.updateValueAndValidity({ emitEvent: false });
+	}
 	}
 
 	onLangChange(lang: SupportedLanguage) {
@@ -137,5 +155,16 @@ export class AppComponent implements OnInit {
 
 	private	async markSignalFormTouched(formSig: typeof this.signalForm) {
 		await submit(formSig, async () => undefined);
+	}
+
+	private async getEmployeeErrorMsg(): Promise<TriLangText> {
+		const employeeIdRegexMsg: TriLangText = {
+			de: 'Ungültige Personalnummer. Erwartet: «EMP-1234».',
+			fr: 'Numéro du personnel invalide. Attendu : «EMP-1234».',
+			en: 'Invalid employee ID. Expected: “EMP-1234”.',
+		};
+		// Delay to simulate async retrieval of error message (e.g., from a server or translation service)
+		await new Promise(resolve => setTimeout(resolve, 500));
+		return employeeIdRegexMsg;
 	}
 }

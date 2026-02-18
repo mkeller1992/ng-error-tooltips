@@ -1,12 +1,26 @@
 import { SchemaPath } from '@angular/forms/signals';
 import { ERROR_MESSAGES, tri } from './error-messages.const';
 import { TriLangText } from './tri-lang-text.type';
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, Signal } from '@angular/core';
 import { ERROR_TOOLTIP_SIG_VALIDATE } from '../error-tooltip-sig-validate.token';
+
+type TriLangTextLike = TriLangText | Signal<TriLangText | null | undefined> | (() => TriLangText | null | undefined);
 
 @Injectable({ providedIn: 'root' })
 export class CustomSigValidators {
 	private readonly validate = inject(ERROR_TOOLTIP_SIG_VALIDATE);
+
+	private resolveTriLangText(v?: TriLangTextLike): TriLangText | null {
+		if (!v) return null;
+		if (typeof v === 'function') return (v as () => TriLangText | null | undefined)() ?? null;
+		if (typeof v === 'object') {
+			// Signal is a function at runtime. But typing-wise it's an object here if it comes through Signal<T>.
+			// In Angular signals, `Signal<T>` is callable, so we handle it via "as any".
+			const maybeFn = v as any;
+			return typeof maybeFn === 'function' ? (maybeFn() ?? null) : (v as TriLangText);
+		}
+		return null;
+	}
 
 	required(path: SchemaPath<any>, errorMessage?: string): void {
 		this.validate(path, (ctx) => {
@@ -255,128 +269,128 @@ export class CustomSigValidators {
 
 	/* VALIDATORS (returning tri-language error messages) */
 
-	requiredI18n(path: SchemaPath<any>, errorMessage?: TriLangText): void {
+	requiredI18n(path: SchemaPath<any>, errorMessage?: TriLangTextLike): void {
 		this.validate(path, (ctx) => {
 			const isEmpty = this.isEmptyValue(ctx.value());
-			const msg = errorMessage ?? tri('required');
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('required');
 			return isEmpty ? { kind: 'required', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
-	trueRequiredI18n(path: SchemaPath<boolean | null | undefined>, errorMessage?: TriLangText): void {
+	trueRequiredI18n(path: SchemaPath<boolean | null | undefined>, errorMessage?: TriLangTextLike): void {
 		this.validate(path, (ctx) => {
-			const msg = errorMessage ?? tri('trueRequired');
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('trueRequired');
 			return ctx.value() === true ? undefined : { kind: 'trueRequired', message: 'i18n', i18n: msg };
 		});
 	}
 
-	minLengthI18n(path: SchemaPath<string | number | null | undefined>, minLength: number, errorMessage?: TriLangText): void {
+	minLengthI18n(path: SchemaPath<string | number | null | undefined>, minLength: number, errorMessage?: TriLangTextLike): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 			if (!value) return undefined; // keep legacy behaviour (0 stays "empty", as before)
-			const msg = errorMessage ?? tri('minLength', minLength);
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('minLength', minLength);
 			const str = String(value);
 			return str.length < minLength ? { kind: 'minLength', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
-	maxLengthI18n(path: SchemaPath<string | number | null | undefined>, maxLength: number, errorMessage?: TriLangText): void {
+	maxLengthI18n(path: SchemaPath<string | number | null | undefined>, maxLength: number, errorMessage?: TriLangTextLike): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 			if (!value) return undefined; // keep legacy behaviour (0 stays "empty", as before)
-			const msg = errorMessage ?? tri('maxLength', maxLength);
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('maxLength', maxLength);
 			const str = String(value);
 			return str.length > maxLength ? { kind: 'maxLength', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
-	smallerThanI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangText): void {
+	smallerThanI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangTextLike): void {
 		this.validate(path, (ctx) => {
 			const numericValue = this.toNumberOrNull(ctx.value());
 			if (numericValue === null) return undefined;
 
-			const msg = errorMessage ?? tri('smallerThan', referenceValue);
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('smallerThan', referenceValue);
 			return numericValue >= referenceValue ? { kind: 'smallerThan', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
-	formattedSmallerThanI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangText): void {
+	formattedSmallerThanI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangTextLike): void {
 		this.validate(path, (ctx) => {
 			const numericValue = this.toNumberOrNull(ctx.value());
 			if (numericValue === null) return undefined;
 
-			const msg = errorMessage ?? tri('formattedSmallerThan', referenceValue);
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('formattedSmallerThan', referenceValue);
 			return numericValue >= referenceValue ? { kind: 'smallerThan', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
-	greaterThanI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangText): void {
+	greaterThanI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangTextLike): void {
 		this.validate(path, (ctx) => {
 			const numericValue = this.toNumberOrNull(ctx.value());
 			if (numericValue === null) return undefined;
 
-			const msg = errorMessage ?? tri('greaterThan', referenceValue);
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('greaterThan', referenceValue);
 			return numericValue <= referenceValue ? { kind: 'greaterThan', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
-	formattedGreaterThanI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangText): void {
+	formattedGreaterThanI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangTextLike): void {
 		this.validate(path, (ctx) => {
 			const numericValue = this.toNumberOrNull(ctx.value());
 			if (numericValue === null) return undefined;
 
-			const msg = errorMessage ?? tri('formattedGreaterThan', referenceValue);
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('formattedGreaterThan', referenceValue);
 			return numericValue <= referenceValue ? { kind: 'greaterThan', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
-	minValueI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangText): void {
+	minValueI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangTextLike): void {
 		this.validate(path, (ctx) => {
 			const numericValue = this.toNumberOrNull(ctx.value());
 			if (numericValue === null) return undefined;
 
-			const msg = errorMessage ?? tri('minValue', referenceValue);
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('minValue', referenceValue);
 			// keep legacy keying: { greaterThan: ... }
 			return numericValue < referenceValue ? { kind: 'greaterThan', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
-	formattedMinValueI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangText): void {
+	formattedMinValueI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangTextLike): void {
 		this.validate(path, (ctx) => {
 			const numericValue = this.toNumberOrNull(ctx.value());
 			if (numericValue === null) return undefined;
 
-			const msg = errorMessage ?? tri('formattedMinValue', referenceValue);
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('formattedMinValue', referenceValue);
 			// keep legacy keying
 			return numericValue < referenceValue ? { kind: 'greaterThan', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
-	maxValueI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangText): void {
+	maxValueI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangTextLike): void {
 		this.validate(path, (ctx) => {
 			const numericValue = this.toNumberOrNull(ctx.value());
 			if (numericValue === null) return undefined;
 
-			const msg = errorMessage ?? tri('maxValue', referenceValue);
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('maxValue', referenceValue);
 			// keep legacy keying: { smallerThan: ... }
 			return numericValue > referenceValue ? { kind: 'smallerThan', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
-	formattedMaxValueI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangText): void {
+	formattedMaxValueI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangTextLike): void {
 		this.validate(path, (ctx) => {
 			const numericValue = this.toNumberOrNull(ctx.value());
 			if (numericValue === null) return undefined;
 
-			const msg = errorMessage ?? tri('formattedMaxValue', referenceValue);
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('formattedMaxValue', referenceValue);
 			// keep legacy keying
 			return numericValue > referenceValue ? { kind: 'smallerThan', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
-	lettersOnlyI18n(path: SchemaPath<string | null | undefined>, errorMessage?: TriLangText): void {
+	lettersOnlyI18n(path: SchemaPath<string | null | undefined>, errorMessage?: TriLangTextLike): void {
 		this.validate(path, (ctx) => {
-			const msg = errorMessage ?? tri('lettersOnly');
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('lettersOnly');
 			const regex = new RegExp('^[A-Za-zÀ-ÖØ-öø-ÿ ]*$');
 			const value = ctx.value();
 
@@ -387,7 +401,7 @@ export class CustomSigValidators {
 		});
 	}
 
-	emailI18n(path: SchemaPath<string | null | undefined>, errorMessage?: TriLangText): void {
+	emailI18n(path: SchemaPath<string | null | undefined>, errorMessage?: TriLangTextLike): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 
@@ -396,7 +410,7 @@ export class CustomSigValidators {
 			const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 			if (!emailRegex.test(value)) {
-				const msg = errorMessage ?? tri('invalidEmail');
+				const msg = this.resolveTriLangText(errorMessage) ?? tri('invalidEmail');
 				return { kind: 'invalidEmail', message: 'i18n', i18n: msg };
 			}
 
@@ -435,14 +449,15 @@ export class CustomSigValidators {
 		});
 	}
 
-	regexPatternI18n(path: SchemaPath<string | null | undefined>, pattern: RegExp, errorMessage: TriLangText): void {
+	regexPatternI18n(path: SchemaPath<string | null | undefined>, pattern: RegExp, errorMessage: TriLangTextLike): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 
 			if (value === null || value === undefined || value === '') return undefined;
 
+			const msg = this.resolveTriLangText(errorMessage);
 			const isValid = pattern.test(value);
-			return isValid ? undefined : { kind: 'regexPattern', message: 'i18n', i18n: errorMessage };
+			return isValid ? undefined : { kind: 'regexPattern', message: 'i18n', i18n: msg };
 		});
 	}
 

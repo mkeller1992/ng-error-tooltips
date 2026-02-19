@@ -4,11 +4,21 @@ import { TriLangText } from './tri-lang-text.type';
 import { inject, Injectable, Signal } from '@angular/core';
 import { ERROR_TOOLTIP_SIG_VALIDATE } from '../error-tooltip-sig-validate.token';
 
-type TriLangTextLike = TriLangText | Signal<TriLangText | null | undefined> | (() => TriLangText | null | undefined);
+type TriLangTextLike =
+	| TriLangText
+	| Signal<TriLangText | null | undefined>
+	| (() => TriLangText | null | undefined);
+
+type ValueLike<T> = T | Signal<T> | (() => T);
 
 @Injectable({ providedIn: 'root' })
 export class CustomSigValidators {
 	private readonly validate = inject(ERROR_TOOLTIP_SIG_VALIDATE);
+
+	private resolve<T>(v: ValueLike<T>): T {
+		// Signal<T> is a function at runtime
+		return typeof v === 'function' ? (v as any)() : v;
+	}
 
 	private resolveTriLangText(v?: TriLangTextLike): TriLangText | null {
 		if (!v) return null;
@@ -22,9 +32,9 @@ export class CustomSigValidators {
 		return null;
 	}
 
-	required(path: SchemaPath<any>, errorMessage?: string): void {
+	required(path: SchemaPath<any>, errorMessage?: ValueLike<string>): void {
 		this.validate(path, (ctx) => {
-			const errorMsg = errorMessage ?? ERROR_MESSAGES.required.de();
+			const errorMsg = errorMessage ? this.resolve(errorMessage) : ERROR_MESSAGES.required.de();
 			const value = ctx.value();
 			const isEmpty =
 				value === null || value === undefined || value === '' ||
@@ -34,36 +44,50 @@ export class CustomSigValidators {
 		});
 	}
 
-	trueRequired(path: SchemaPath<boolean | null | undefined>, errorMessage?: string): void {
+	trueRequired(path: SchemaPath<boolean | null | undefined>, errorMessage?: ValueLike<string>): void {
 		this.validate(path, (ctx) => {
-			const msg = errorMessage ?? ERROR_MESSAGES.trueRequired.de();
+			const msg = errorMessage ? this.resolve(errorMessage) : ERROR_MESSAGES.trueRequired.de();
 			return ctx.value() === true ? undefined : { kind: 'trueRequired', message: msg };
 		});
 	}
 
-	minLength(path: SchemaPath<string | number | null | undefined>, minLength: number, errorMessage?: string): void {
+	minLength(
+		path: SchemaPath<string | number | null | undefined>,
+		minLength: ValueLike<number>,
+		errorMessage?: ValueLike<string>
+	): void {
 		this.validate(path, (ctx) => {
-			const errorMsg = errorMessage ?? ERROR_MESSAGES.minLength.de(minLength);
+			const min = this.resolve(minLength);
+			const errorMsg = errorMessage ? this.resolve(errorMessage) : ERROR_MESSAGES.minLength.de(min);
 			const value = ctx.value();
 			const str = value === null || value === undefined ? '' : String(value);
-			return !!str && str.length < minLength
+			return !!str && str.length < min
 				? { kind: 'minLength', message: errorMsg }
 				: undefined;
 		});
 	}
 
-	maxLength(path: SchemaPath<string | number | null | undefined>, maxLength: number, errorMessage?: string): void {
+	maxLength(
+		path: SchemaPath<string | number | null | undefined>,
+		maxLength: ValueLike<number>,
+		errorMessage?: ValueLike<string>
+	): void {
 		this.validate(path, (ctx) => {
-			const errorMsg = errorMessage ?? ERROR_MESSAGES.maxLength.de(maxLength);
+			const max = this.resolve(maxLength);
+			const errorMsg = errorMessage ? this.resolve(errorMessage) : ERROR_MESSAGES.maxLength.de(max);
 			const value = ctx.value();
 			const str = value === null || value === undefined ? '' : String(value);
-			return !!str && str.length > maxLength
+			return !!str && str.length > max
 				? { kind: 'maxLength', message: errorMsg }
 				: undefined;
 		});
 	}
 
-	smallerThan(path: SchemaPath<any>, referenceValue: number, errorMessage?: string): void {
+	smallerThan(
+		path: SchemaPath<any>,
+		referenceValue: ValueLike<number>,
+		errorMessage?: ValueLike<string>
+	): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 
@@ -74,14 +98,19 @@ export class CustomSigValidators {
 			// If it's not a number, do not this.validate
 			if (isNaN(numericValue)) return undefined;
 
-			const errorMsg = errorMessage ?? ERROR_MESSAGES.smallerThan.de(referenceValue);
-			return numericValue >= referenceValue
+			const ref = this.resolve(referenceValue);
+			const errorMsg = errorMessage ? this.resolve(errorMessage) : ERROR_MESSAGES.smallerThan.de(ref);
+			return numericValue >= ref
 				? { kind: 'smallerThan', message: errorMsg }
 				: undefined;
 		});
 	}
 
-	formattedSmallerThan(path: SchemaPath<any>, referenceValue: number, errorMessage?: string): void {
+	formattedSmallerThan(
+		path: SchemaPath<any>,
+		referenceValue: ValueLike<number>,
+		errorMessage?: ValueLike<string>
+	): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 			if (value === null || value === undefined || value === '') return undefined;
@@ -89,14 +118,19 @@ export class CustomSigValidators {
 			const numericValue = Number(value);
 			if (isNaN(numericValue)) return undefined;
 
-			const errorMsg = errorMessage ?? ERROR_MESSAGES.formattedSmallerThan.de(referenceValue);
-			return numericValue >= referenceValue
+			const ref = this.resolve(referenceValue);
+			const errorMsg = errorMessage ? this.resolve(errorMessage) : ERROR_MESSAGES.formattedSmallerThan.de(ref);
+			return numericValue >= ref
 				? { kind: 'smallerThan', message: errorMsg }
 				: undefined;
 		});
 	}
 
-	greaterThan(path: SchemaPath<any>, referenceValue: number, errorMessage?: string): void {
+	greaterThan(
+		path: SchemaPath<any>,
+		referenceValue: ValueLike<number>,
+		errorMessage?: ValueLike<string>
+	): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 			if (value === null || value === undefined || value === '') return undefined;
@@ -104,14 +138,19 @@ export class CustomSigValidators {
 			const numericValue = Number(value);
 			if (isNaN(numericValue)) return undefined;
 
-			const errorMsg = errorMessage ?? ERROR_MESSAGES.greaterThan.de(referenceValue);
-			return numericValue <= referenceValue
+			const ref = this.resolve(referenceValue);
+			const errorMsg = errorMessage ? this.resolve(errorMessage) : ERROR_MESSAGES.greaterThan.de(ref);
+			return numericValue <= ref
 				? { kind: 'greaterThan', message: errorMsg }
 				: undefined;
 		});
 	}
 
-	formattedGreaterThan(path: SchemaPath<any>, referenceValue: number, errorMessage?: string): void {
+	formattedGreaterThan(
+		path: SchemaPath<any>,
+		referenceValue: ValueLike<number>,
+		errorMessage?: ValueLike<string>
+	): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 			if (value === null || value === undefined || value === '') return undefined;
@@ -119,14 +158,19 @@ export class CustomSigValidators {
 			const numericValue = Number(value);
 			if (isNaN(numericValue)) return undefined;
 
-			const errorMsg = errorMessage ?? ERROR_MESSAGES.formattedGreaterThan.de(referenceValue);
-			return numericValue <= referenceValue
+			const ref = this.resolve(referenceValue);
+			const errorMsg = errorMessage ? this.resolve(errorMessage) : ERROR_MESSAGES.formattedGreaterThan.de(ref);
+			return numericValue <= ref
 				? { kind: 'greaterThan', message: errorMsg }
 				: undefined;
 		});
 	}
 
-	minValue(path: SchemaPath<any>, referenceValue: number, errorMessage?: string): void {
+	minValue(
+		path: SchemaPath<any>,
+		referenceValue: ValueLike<number>,
+		errorMessage?: ValueLike<string>
+	): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 			if (value === null || value === undefined || value === '') return undefined;
@@ -134,16 +178,21 @@ export class CustomSigValidators {
 			const numericValue = Number(value);
 			if (isNaN(numericValue)) return undefined;
 
-			const errorMsg = errorMessage ?? ERROR_MESSAGES.minValue.de(referenceValue);
+			const ref = this.resolve(referenceValue);
+			const errorMsg = errorMessage ? this.resolve(errorMessage) : ERROR_MESSAGES.minValue.de(ref);
 
 			// NOTE: replicate exactly your legacy keying: { greaterThan: msg }
-			return numericValue < referenceValue
+			return numericValue < ref
 				? { kind: 'greaterThan', message: errorMsg }
 				: undefined;
 		});
 	}
 
-	formattedMinValue(path: SchemaPath<any>, referenceValue: number, errorMessage?: string): void {
+	formattedMinValue(
+		path: SchemaPath<any>,
+		referenceValue: ValueLike<number>,
+		errorMessage?: ValueLike<string>
+	): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 			if (value === null || value === undefined || value === '') return undefined;
@@ -151,16 +200,21 @@ export class CustomSigValidators {
 			const numericValue = Number(value);
 			if (isNaN(numericValue)) return undefined;
 
-			const errorMsg = errorMessage ?? ERROR_MESSAGES.formattedMinValue.de(referenceValue);
+			const ref = this.resolve(referenceValue);
+			const errorMsg = errorMessage ? this.resolve(errorMessage) : ERROR_MESSAGES.formattedMinValue.de(ref);
 
 			// replicate legacy keying
-			return numericValue < referenceValue
+			return numericValue < ref
 				? { kind: 'greaterThan', message: errorMsg }
 				: undefined;
 		});
 	}
 
-	maxValue(path: SchemaPath<any>, referenceValue: number, errorMessage?: string): void {
+	maxValue(
+		path: SchemaPath<any>,
+		referenceValue: ValueLike<number>,
+		errorMessage?: ValueLike<string>
+	): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 			if (value === null || value === undefined || value === '') return undefined;
@@ -168,14 +222,19 @@ export class CustomSigValidators {
 			const numericValue = Number(value);
 			if (isNaN(numericValue)) return undefined;
 
-			const errorMsg = errorMessage ?? ERROR_MESSAGES.maxValue.de(referenceValue);
-			return numericValue > referenceValue
+			const ref = this.resolve(referenceValue);
+			const errorMsg = errorMessage ? this.resolve(errorMessage) : ERROR_MESSAGES.maxValue.de(ref);
+			return numericValue > ref
 				? { kind: 'smallerThan', message: errorMsg }
 				: undefined;
 		});
 	}
 
-	formattedMaxValue(path: SchemaPath<any>, referenceValue: number, errorMessage?: string): void {
+	formattedMaxValue(
+		path: SchemaPath<any>,
+		referenceValue: ValueLike<number>,
+		errorMessage?: ValueLike<string>
+	): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 			if (value === null || value === undefined || value === '') return undefined;
@@ -183,16 +242,17 @@ export class CustomSigValidators {
 			const numericValue = Number(value);
 			if (isNaN(numericValue)) return undefined;
 
-			const errorMsg = errorMessage ?? ERROR_MESSAGES.formattedMaxValue.de(referenceValue);
-			return numericValue > referenceValue
+			const ref = this.resolve(referenceValue);
+			const errorMsg = errorMessage ? this.resolve(errorMessage) : ERROR_MESSAGES.formattedMaxValue.de(ref);
+			return numericValue > ref
 				? { kind: 'smallerThan', message: errorMsg }
 				: undefined;
 		});
 	}
 
-	lettersOnly(path: SchemaPath<string | null | undefined>, errorMessage?: string): void {
+	lettersOnly(path: SchemaPath<string | null | undefined>, errorMessage?: ValueLike<string>): void {
 		this.validate(path, (ctx) => {
-			const errorMsg = errorMessage ?? ERROR_MESSAGES.lettersOnly.de();
+			const errorMsg = errorMessage ? this.resolve(errorMessage) : ERROR_MESSAGES.lettersOnly.de();
 			const regex = new RegExp('^[A-Za-zÀ-ÖØ-öø-ÿ ]*$');
 			const value = ctx.value();
 
@@ -204,7 +264,7 @@ export class CustomSigValidators {
 		});
 	}
 
-	email(path: SchemaPath<string | null | undefined>, errorMessage?: string): void {
+	email(path: SchemaPath<string | null | undefined>, errorMessage?: ValueLike<string>): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 
@@ -214,7 +274,7 @@ export class CustomSigValidators {
 			const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 			if (!emailRegex.test(value)) {
-				const errorMsg = errorMessage ?? ERROR_MESSAGES.invalidEmail.de();
+				const errorMsg = errorMessage ? this.resolve(errorMessage) : ERROR_MESSAGES.invalidEmail.de();
 				return { kind: 'invalidEmail', message: errorMsg };
 			}
 
@@ -226,23 +286,27 @@ export class CustomSigValidators {
 
 	passwordErrors(
 		path: SchemaPath<string | null | undefined>,
-		minLength: number,
-		minDigits: number,
-		minCapitalLetters: number
+		minLength: ValueLike<number>,
+		minDigits: ValueLike<number>,
+		minCapitalLetters: ValueLike<number>
 	): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value() ?? '';
 
+			const minLen = this.resolve(minLength);
+			const digits = this.resolve(minDigits);
+			const capitals = this.resolve(minCapitalLetters);
+
 			const isEmpty = !value.length;
-			const violatesMinLength = isEmpty || value.length < minLength;
-			const violatesMinDigits = isEmpty || value.split('').filter((c: any) => !isNaN(c)).length < minDigits;
+			const violatesMinLength = isEmpty || value.length < minLen;
+			const violatesMinDigits = isEmpty || value.split('').filter((c: any) => !isNaN(c)).length < digits;
 			const violatesMinCapitalLetters =
-				isEmpty || value.split('').filter((c: any) => /^[A-Za-zÀ-ÖØ-öø-ÿ]*$/.test(c) && c === c.toUpperCase()).length < minCapitalLetters;
+				isEmpty || value.split('').filter((c: any) => /^[A-Za-zÀ-ÖØ-öø-ÿ]*$/.test(c) && c === c.toUpperCase()).length < capitals;
 
 			const errors = [
-				{ error: violatesMinLength, text: ERROR_MESSAGES.minLength.de(minLength) },
-				{ error: violatesMinDigits, text: ERROR_MESSAGES.minNumberOfDigits.de(minDigits) },
-				{ error: violatesMinCapitalLetters, text: ERROR_MESSAGES.minNumberOfCapitalLetters.de(minCapitalLetters) },
+				{ error: violatesMinLength, text: ERROR_MESSAGES.minLength.de(minLen) },
+				{ error: violatesMinDigits, text: ERROR_MESSAGES.minNumberOfDigits.de(digits) },
+				{ error: violatesMinCapitalLetters, text: ERROR_MESSAGES.minNumberOfCapitalLetters.de(capitals) },
 			];
 
 			const errorsInFormControl = errors.filter(e => e.error === true);
@@ -253,7 +317,11 @@ export class CustomSigValidators {
 		});
 	}
 
-	regexPattern(path: SchemaPath<string | null | undefined>, pattern: RegExp, errorMessage: string): void {
+	regexPattern(
+		path: SchemaPath<string | null | undefined>,
+		pattern: RegExp,
+		errorMessage: ValueLike<string>
+	): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 
@@ -261,7 +329,7 @@ export class CustomSigValidators {
 			if (value === null || value === undefined || value === '') return undefined;
 
 			const isValid = pattern.test(value);
-			return isValid ? undefined : { kind: 'regexPattern', message: errorMessage };
+			return isValid ? undefined : { kind: 'regexPattern', message: this.resolve(errorMessage) };
 		});
 	}
 
@@ -284,107 +352,161 @@ export class CustomSigValidators {
 		});
 	}
 
-	minLengthI18n(path: SchemaPath<string | number | null | undefined>, minLength: number, errorMessage?: TriLangTextLike): void {
+	minLengthI18n(
+		path: SchemaPath<string | number | null | undefined>,
+		minLength: ValueLike<number>,
+		errorMessage?: TriLangTextLike
+	): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 			if (!value) return undefined; // keep legacy behaviour (0 stays "empty", as before)
-			const msg = this.resolveTriLangText(errorMessage) ?? tri('minLength', minLength);
+
+			const min = this.resolve(minLength);
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('minLength', min);
+
 			const str = String(value);
-			return str.length < minLength ? { kind: 'minLength', message: 'i18n', i18n: msg } : undefined;
+			return str.length < min ? { kind: 'minLength', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
-	maxLengthI18n(path: SchemaPath<string | number | null | undefined>, maxLength: number, errorMessage?: TriLangTextLike): void {
+	maxLengthI18n(
+		path: SchemaPath<string | number | null | undefined>,
+		maxLength: ValueLike<number>,
+		errorMessage?: TriLangTextLike
+	): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 			if (!value) return undefined; // keep legacy behaviour (0 stays "empty", as before)
-			const msg = this.resolveTriLangText(errorMessage) ?? tri('maxLength', maxLength);
+
+			const max = this.resolve(maxLength);
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('maxLength', max);
+
 			const str = String(value);
-			return str.length > maxLength ? { kind: 'maxLength', message: 'i18n', i18n: msg } : undefined;
+			return str.length > max ? { kind: 'maxLength', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
-	smallerThanI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangTextLike): void {
+	smallerThanI18n(
+		path: SchemaPath<any>,
+		referenceValue: ValueLike<number>,
+		errorMessage?: TriLangTextLike
+	): void {
 		this.validate(path, (ctx) => {
 			const numericValue = this.toNumberOrNull(ctx.value());
 			if (numericValue === null) return undefined;
 
-			const msg = this.resolveTriLangText(errorMessage) ?? tri('smallerThan', referenceValue);
-			return numericValue >= referenceValue ? { kind: 'smallerThan', message: 'i18n', i18n: msg } : undefined;
+			const ref = this.resolve(referenceValue);
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('smallerThan', ref);
+			return numericValue >= ref ? { kind: 'smallerThan', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
-	formattedSmallerThanI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangTextLike): void {
+	formattedSmallerThanI18n(
+		path: SchemaPath<any>,
+		referenceValue: ValueLike<number>,
+		errorMessage?: TriLangTextLike
+	): void {
 		this.validate(path, (ctx) => {
 			const numericValue = this.toNumberOrNull(ctx.value());
 			if (numericValue === null) return undefined;
 
-			const msg = this.resolveTriLangText(errorMessage) ?? tri('formattedSmallerThan', referenceValue);
-			return numericValue >= referenceValue ? { kind: 'smallerThan', message: 'i18n', i18n: msg } : undefined;
+			const ref = this.resolve(referenceValue);
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('formattedSmallerThan', ref);
+			return numericValue >= ref ? { kind: 'smallerThan', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
-	greaterThanI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangTextLike): void {
+	greaterThanI18n(
+		path: SchemaPath<any>,
+		referenceValue: ValueLike<number>,
+		errorMessage?: TriLangTextLike
+	): void {
 		this.validate(path, (ctx) => {
 			const numericValue = this.toNumberOrNull(ctx.value());
 			if (numericValue === null) return undefined;
 
-			const msg = this.resolveTriLangText(errorMessage) ?? tri('greaterThan', referenceValue);
-			return numericValue <= referenceValue ? { kind: 'greaterThan', message: 'i18n', i18n: msg } : undefined;
+			const ref = this.resolve(referenceValue);
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('greaterThan', ref);
+			return numericValue <= ref ? { kind: 'greaterThan', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
-	formattedGreaterThanI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangTextLike): void {
+	formattedGreaterThanI18n(
+		path: SchemaPath<any>,
+		referenceValue: ValueLike<number>,
+		errorMessage?: TriLangTextLike
+	): void {
 		this.validate(path, (ctx) => {
 			const numericValue = this.toNumberOrNull(ctx.value());
 			if (numericValue === null) return undefined;
 
-			const msg = this.resolveTriLangText(errorMessage) ?? tri('formattedGreaterThan', referenceValue);
-			return numericValue <= referenceValue ? { kind: 'greaterThan', message: 'i18n', i18n: msg } : undefined;
+			const ref = this.resolve(referenceValue);
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('formattedGreaterThan', ref);
+			return numericValue <= ref ? { kind: 'greaterThan', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
-	minValueI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangTextLike): void {
+	minValueI18n(
+		path: SchemaPath<any>,
+		referenceValue: ValueLike<number>,
+		errorMessage?: TriLangTextLike
+	): void {
 		this.validate(path, (ctx) => {
 			const numericValue = this.toNumberOrNull(ctx.value());
 			if (numericValue === null) return undefined;
 
-			const msg = this.resolveTriLangText(errorMessage) ?? tri('minValue', referenceValue);
+			const ref = this.resolve(referenceValue);
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('minValue', ref);
 			// keep legacy keying: { greaterThan: ... }
-			return numericValue < referenceValue ? { kind: 'greaterThan', message: 'i18n', i18n: msg } : undefined;
+			return numericValue < ref ? { kind: 'greaterThan', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
-	formattedMinValueI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangTextLike): void {
+	formattedMinValueI18n(
+		path: SchemaPath<any>,
+		referenceValue: ValueLike<number>,
+		errorMessage?: TriLangTextLike
+	): void {
 		this.validate(path, (ctx) => {
 			const numericValue = this.toNumberOrNull(ctx.value());
 			if (numericValue === null) return undefined;
 
-			const msg = this.resolveTriLangText(errorMessage) ?? tri('formattedMinValue', referenceValue);
+			const ref = this.resolve(referenceValue);
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('formattedMinValue', ref);
 			// keep legacy keying
-			return numericValue < referenceValue ? { kind: 'greaterThan', message: 'i18n', i18n: msg } : undefined;
+			return numericValue < ref ? { kind: 'greaterThan', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
-	maxValueI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangTextLike): void {
+	maxValueI18n(
+		path: SchemaPath<any>,
+		referenceValue: ValueLike<number>,
+		errorMessage?: TriLangTextLike
+	): void {
 		this.validate(path, (ctx) => {
 			const numericValue = this.toNumberOrNull(ctx.value());
 			if (numericValue === null) return undefined;
 
-			const msg = this.resolveTriLangText(errorMessage) ?? tri('maxValue', referenceValue);
+			const ref = this.resolve(referenceValue);
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('maxValue', ref);
 			// keep legacy keying: { smallerThan: ... }
-			return numericValue > referenceValue ? { kind: 'smallerThan', message: 'i18n', i18n: msg } : undefined;
+			return numericValue > ref ? { kind: 'smallerThan', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
-	formattedMaxValueI18n(path: SchemaPath<any>, referenceValue: number, errorMessage?: TriLangTextLike): void {
+	formattedMaxValueI18n(
+		path: SchemaPath<any>,
+		referenceValue: ValueLike<number>,
+		errorMessage?: TriLangTextLike
+	): void {
 		this.validate(path, (ctx) => {
 			const numericValue = this.toNumberOrNull(ctx.value());
 			if (numericValue === null) return undefined;
 
-			const msg = this.resolveTriLangText(errorMessage) ?? tri('formattedMaxValue', referenceValue);
+			const ref = this.resolve(referenceValue);
+			const msg = this.resolveTriLangText(errorMessage) ?? tri('formattedMaxValue', ref);
 			// keep legacy keying
-			return numericValue > referenceValue ? { kind: 'smallerThan', message: 'i18n', i18n: msg } : undefined;
+			return numericValue > ref ? { kind: 'smallerThan', message: 'i18n', i18n: msg } : undefined;
 		});
 	}
 
@@ -422,23 +544,27 @@ export class CustomSigValidators {
 
 	passwordErrorsI18n(
 		path: SchemaPath<string | null | undefined>,
-		minLength: number,
-		minDigits: number,
-		minCapitalLetters: number
+		minLength: ValueLike<number>,
+		minDigits: ValueLike<number>,
+		minCapitalLetters: ValueLike<number>
 	): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value() ?? '';
 			const isEmpty = !value.length;
 
-			const violatesMinLength = isEmpty || value.length < minLength;
-			const violatesMinDigits = isEmpty || value.split('').filter((c: any) => !isNaN(c)).length < minDigits;
+			const minLen = this.resolve(minLength);
+			const minDigit = this.resolve(minDigits);
+			const minCapitals = this.resolve(minCapitalLetters);
+
+			const violatesMinLength = isEmpty || value.length < minLen;
+			const violatesMinDigits = isEmpty || value.split('').filter((c: any) => !isNaN(c)).length < minDigit;
 			const violatesMinCapitalLetters =
-				isEmpty || value.split('').filter((c: any) => /^[A-Za-zÀ-ÖØ-öø-ÿ]*$/.test(c) && c === c.toUpperCase()).length < minCapitalLetters;
+				isEmpty || value.split('').filter((c: any) => /^[A-Za-zÀ-ÖØ-öø-ÿ]*$/.test(c) && c === c.toUpperCase()).length < minCapitals;
 
 			const errors = [
-				{ error: violatesMinLength, text: tri('minLength', minLength) },
-				{ error: violatesMinDigits, text: tri('minNumberOfDigits', minDigits) },
-				{ error: violatesMinCapitalLetters, text: tri('minNumberOfCapitalLetters', minCapitalLetters) },
+				{ error: violatesMinLength, text: tri('minLength', minLen) },
+				{ error: violatesMinDigits, text: tri('minNumberOfDigits', minDigit) },
+				{ error: violatesMinCapitalLetters, text: tri('minNumberOfCapitalLetters', minCapitals) },
 			];
 
 			const errorsInFormControl = errors.filter(e => e.error === true);
@@ -449,7 +575,11 @@ export class CustomSigValidators {
 		});
 	}
 
-	regexPatternI18n(path: SchemaPath<string | null | undefined>, pattern: RegExp, errorMessage: TriLangTextLike): void {
+	regexPatternI18n(
+		path: SchemaPath<string | null | undefined>,
+		pattern: RegExp,
+		errorMessage: TriLangTextLike
+	): void {
 		this.validate(path, (ctx) => {
 			const value = ctx.value();
 

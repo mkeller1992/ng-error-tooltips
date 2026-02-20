@@ -151,6 +151,7 @@ function makeFakeTooltipRef() {
 			showTooltip: jest.fn(),
 			setVisibilityAndPosition: jest.fn(),
 			userClickOnTooltip$: new Subject<void>(),
+			hasErrors: jest.fn(() => true),
 		},
 		setInput: setInputMock,
 		destroy: jest.fn(),

@@ -41,6 +41,7 @@ export class NgErrorTooltipComponent {
 			.filter((e): e is string => !!e && e.trim().length > 0);
 	});
 
+	// Will be used by error-tooltip-directive to decide whether to still show or destroy the tooltip:
 	readonly hasErrors = computed(() => this.translatedErrors().length > 0);
 
 	// Informs error-tooltip-directive when user clicked on tooltip:
@@ -89,15 +90,6 @@ export class NgErrorTooltipComponent {
 		effect(() => {
 			const opts = this.options(); // track dependency
 			this.applyOptions(opts);
-		});
-
-		// Make sure tooltip immediately hides if there are no more errors
-		effect(() => {
-			const hasErrors = this.hasErrors();
-			if (!hasErrors) {
-				this._displayNone.set(true);
-				this._isShown.set(false);
-			}
 		});
 	}
 

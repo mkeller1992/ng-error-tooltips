@@ -123,12 +123,11 @@ export class AppComponent implements OnInit {
 		const employeeIdCtrl = this.formGroup.get('employeeIdInput');
 		if (employeeIdCtrl) {
 			employeeIdCtrl.addValidators([
-				CustomValidators.regexPatternI18n(this.employeeIdRegex, asyncErrorMsg as TriLangText),
-		]);
+				CustomValidators.regexPatternI18n(this.employeeIdRegex, asyncErrorMsg as TriLangText)]);
 
-		// Recompute validity, but don't spam valueChanges:
-		employeeIdCtrl.updateValueAndValidity({ emitEvent: false });
-	}
+			// Recompute validity, but don't spam valueChanges:
+			employeeIdCtrl.updateValueAndValidity({ emitEvent: false });
+		}
 	}
 
 	onLangChange(lang: SupportedLanguage) {

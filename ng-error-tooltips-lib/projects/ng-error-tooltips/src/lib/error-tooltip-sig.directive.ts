@@ -99,6 +99,12 @@ export class ErrorTooltipSigDirective implements OnDestroy {
 			ref.setInput('errors', errs);
 			ref.setInput('formControl', host);
 
+			// If there are no more errors, remove the tooltip completely
+			if (!ref.instance.hasErrors()) {
+				this.destroyTooltip();
+				return;
+			}
+
 			// Re-position if visible (placement/offset changes need it)
 			const comp = this.tooltipComponent();
 			if (this.isTooltipVisible() && comp) {

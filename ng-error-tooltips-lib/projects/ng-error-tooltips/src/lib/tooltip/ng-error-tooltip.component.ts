@@ -35,12 +35,13 @@ export class NgErrorTooltipComponent {
 
 	readonly translatedErrors = computed(() => {
 		const lang = this.langSig();
-
 		return this.errors()
 			.map(e => (typeof e === 'string' ? e : e[lang]))
 			// Remove empty, null, or whitespace-only error messages:
 			.filter((e): e is string => !!e && e.trim().length > 0);
 	});
+
+	readonly hasErrors = computed(() => this.translatedErrors().length > 0);
 
 	// Informs error-tooltip-directive when user clicked on tooltip:
 	private readonly userClickOnTooltipSubject = new Subject<void>();
@@ -88,6 +89,15 @@ export class NgErrorTooltipComponent {
 		effect(() => {
 			const opts = this.options(); // track dependency
 			this.applyOptions(opts);
+		});
+
+		// Make sure tooltip immediately hides if there are no more errors
+		effect(() => {
+			const hasErrors = this.hasErrors();
+			if (!hasErrors) {
+				this._displayNone.set(true);
+				this._isShown.set(false);
+			}
 		});
 	}
 

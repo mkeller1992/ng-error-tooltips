@@ -35,7 +35,11 @@ export class NgErrorTooltipComponent {
 
 	readonly translatedErrors = computed(() => {
 		const lang = this.langSig();
-		return this.errors().map(e => (typeof e === 'string' ? e : e[lang]));
+
+		return this.errors()
+			.map(e => (typeof e === 'string' ? e : e[lang]))
+			// Remove empty, null, or whitespace-only error messages:
+			.filter((e): e is string => !!e && e.trim().length > 0);
 	});
 
 	// Informs error-tooltip-directive when user clicked on tooltip:

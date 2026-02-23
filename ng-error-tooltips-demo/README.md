@@ -52,6 +52,16 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
+### Directives
+
+```ts
+import {
+  ErrorTooltipDirective,
+  ErrorTooltipSigDirective,
+  ErrorTooltipSigFormDirective,
+} from '@ng-error-tooltips';
+```
+
 ---
 
 ## Usage
@@ -99,19 +109,11 @@ export class AppComponent {
 ```
 
 ### Signal Forms
-When using Angular Signal Forms, you should import the bundled constant
-`NG_ERROR_TOOLTIPS_SIGNAL_IMPORTS`.
-
-This ensures that all required directives and dependencies are imported automatically — especially Angular’s `FormField`, which is required for Signal Forms but easy to forget.
 
 ```ts
 import { Component, inject, signal, viewChild } from '@angular/core';
-import { form, submit } from '@angular/forms/signals';
-import {
-  CustomSigValidators,
-  NG_ERROR_TOOLTIPS_SIGNAL_IMPORTS,
-  ErrorTooltipSigFormDirective
-} from '@ng-error-tooltips';
+import { form, FormField, submit } from '@angular/forms/signals';
+import { CustomSigValidators, ErrorTooltipSigDirective, ErrorTooltipSigFormDirective } from '@ng-error-tooltips';
 
 interface Employee {
   name: string;
@@ -120,9 +122,7 @@ interface Employee {
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  imports: [
-    ...NG_ERROR_TOOLTIPS_SIGNAL_IMPORTS
-  ],
+  imports: [FormField, ErrorTooltipSigDirective, ErrorTooltipSigFormDirective],
 })
 export class AppComponent {
   private readonly v = inject(CustomSigValidators);
@@ -139,11 +139,16 @@ export class AppComponent {
   ]);
 
   async submit() {
+    // marks all fields touched + runs validation
     await submit(this.signalForm, async () => undefined);
 
     if (!this.signalForm().valid()) {
+      // show all tooltips inside the container
       this.ttForm()?.showErrorTooltips();
     }
+	else {
+		this.ttForm()?.hideErrorTooltips();
+	}
   }
 }
 ```

@@ -17,5 +17,3 @@ export * from './lib/error-tooltip-sig-form.directive';
 export * from './lib/mocks/mock-error-tooltip.directive';
 export * from './lib/mocks/mock-error-tooltip-sig.directive';
 export * from './lib/mocks/mock-error-tooltip-sig-form.directive';
-
-export * from './lib/ng-error-tooltips.imports';

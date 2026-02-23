@@ -32,7 +32,7 @@ npm i ng-error-tooltips
 ```ts
 import { ApplicationConfig, provideZonelessChangeDetection, signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideErrorTooltips, type SupportedLanguage } from '@ng-error-tooltips';
+import { provideErrorTooltips, type SupportedLanguage } from 'ng-error-tooltips';
 import { validate } from '@angular/forms/signals';
 
 import { routes } from './app.routes';
@@ -59,7 +59,7 @@ import {
   ErrorTooltipDirective,
   ErrorTooltipSigDirective,
   ErrorTooltipSigFormDirective,
-} from '@ng-error-tooltips';
+} from 'ng-error-tooltips';
 ```
 
 ---
@@ -74,7 +74,7 @@ For applications with language switching support, use the `CustomValidatorsI18n`
 ```ts
 import { Component, inject } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ErrorTooltipDirective, CustomValidators } from '@ng-error-tooltips';
+import { ErrorTooltipDirective, CustomValidators } from 'ng-error-tooltips';
 
 @Component({
   selector: 'app-root',
@@ -113,7 +113,7 @@ export class AppComponent {
 ```ts
 import { Component, inject, signal, viewChild } from '@angular/core';
 import { form, FormField, submit } from '@angular/forms/signals';
-import { CustomSigValidators, ErrorTooltipSigDirective, ErrorTooltipSigFormDirective } from '@ng-error-tooltips';
+import { CustomSigValidators, ErrorTooltipSigDirective, ErrorTooltipSigFormDirective } from 'ng-error-tooltips';
 
 interface Employee {
   name: string;
@@ -183,7 +183,7 @@ You can pass separate properties, such as `placement`:
 Alternatively, pass one or more properties via an `ErrorTooltipOptions` object:
 
 ```ts
-import { ErrorTooltipOptions } from '@ng-error-tooltips';
+import { ErrorTooltipOptions } from 'ng-error-tooltips';
 
 tooltipOptions: ErrorTooltipOptions = {
   placement: 'right',
@@ -239,7 +239,7 @@ Whenever the language signal changes, all visible error tooltips update automati
 ```ts
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
-import { ErrorTooltipDirective, MockErrorTooltipDirective } from '@ng-error-tooltips';
+import { ErrorTooltipDirective, MockErrorTooltipDirective } from 'ng-error-tooltips';
 import { FormBuilder } from '@angular/forms';
 
 describe('AppComponent', () => {
@@ -267,7 +267,7 @@ describe('AppComponent', () => {
 ### Mocking `ErrorTooltipSigDirective` and `ErrorTooltipSigFormDirective` (Signal Forms)
 
 ```ts
-import { ErrorTooltipSigDirective, MockErrorTooltipSigDirective } from '@ng-error-tooltips';
+import { ErrorTooltipSigDirective, MockErrorTooltipSigDirective } from 'ng-error-tooltips';
 
 await TestBed.configureTestingModule({
   imports: [AppComponent],

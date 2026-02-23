@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
-import { CustomSigValidators, ErrorTooltipDirective, ErrorTooltipSigDirective, ErrorTooltipSigFormDirective, MockErrorTooltipDirective, MockErrorTooltipSigDirective, MockErrorTooltipSigFormDirective } from '@ng-error-tooltips';
+import { CustomSigValidators } from '@ng-error-tooltips';
 import { FormBuilder } from '@angular/forms';
 import { provideZonelessChangeDetection } from '@angular/core';
 
@@ -25,31 +25,21 @@ describe('AppComponent', () => {
 		minLength() {},
 	};
 
-    await TestBed.configureTestingModule({
-      imports: [AppComponent],
-      providers: [
-        FormBuilder,
-        provideZonelessChangeDetection(),
-		{ provide: CustomSigValidators, useValue: signalValidatorsMock },
-      ]
-    })
-    .overrideComponent(AppComponent, {
-      remove: {
-        imports: [
-          ErrorTooltipDirective,
-		  ErrorTooltipSigDirective,
-		  ErrorTooltipSigFormDirective
-        ]
-      },
-      add: {
-        imports: [
-          MockErrorTooltipDirective,
-		  MockErrorTooltipSigDirective,
-		  MockErrorTooltipSigFormDirective
-        ]
-      }
-    })
-    .compileComponents();
+await TestBed.configureTestingModule({
+  imports: [AppComponent],
+  providers: [
+    FormBuilder,
+    provideZonelessChangeDetection(),
+    { provide: CustomSigValidators, useValue: signalValidatorsMock },
+  ],
+})
+  .overrideComponent(AppComponent, {
+    set: {
+      // Minimal template: avoids instantiating FormField / tooltip directives
+      template: `<div></div>`,
+    },
+  })
+  .compileComponents();
 
     fixture = TestBed.createComponent(AppComponent);
     component = fixture.componentInstance;

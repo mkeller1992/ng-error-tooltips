@@ -1,8 +1,8 @@
-import { Component, OnInit, WritableSignal, inject, signal, viewChild, viewChildren } from '@angular/core';
+import { Component, OnInit, WritableSignal, inject, signal, viewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CustomSigValidators, CustomValidators, ErrorTooltipDirective, ErrorTooltipSigDirective, ErrorTooltipOptions, type SupportedLanguage, type TriLangText, ErrorTooltipSigFormDirective } from '@ng-error-tooltips';
+import { ErrorTooltipDirective, NG_ERROR_TOOLTIPS_SIGNAL_IMPORTS, CustomSigValidators, CustomValidators, ErrorTooltipOptions, type SupportedLanguage, type TriLangText, ErrorTooltipSigFormDirective } from '@ng-error-tooltips';
 import { demoLang } from './app.config';
-import { form, FormField, submit } from '@angular/forms/signals';
+import { form, submit } from '@angular/forms/signals';
 
 interface Employee {
 	nameInput: string;
@@ -15,17 +15,13 @@ interface Employee {
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
-  imports: [FormsModule, ReactiveFormsModule, FormField, ErrorTooltipDirective, ErrorTooltipSigDirective,
-	ErrorTooltipSigFormDirective
-  ],
+  imports: [FormsModule, ReactiveFormsModule, ErrorTooltipDirective, ...NG_ERROR_TOOLTIPS_SIGNAL_IMPORTS ],
 })
 export class AppComponent implements OnInit {
   	private readonly formBuilder = inject(FormBuilder);
 	private readonly v = inject(CustomSigValidators);
 
 	readonly ttForm = viewChild(ErrorTooltipSigFormDirective);
-
-	readonly signalTooltips = viewChildren(ErrorTooltipSigDirective);
 
   	formGroup!: FormGroup;
 
@@ -145,6 +141,7 @@ export class AppComponent implements OnInit {
 		await this.markSignalFormTouched(this.signalForm);
 
 		if (!this.signalForm().valid()) {
+			console.warn('Signal form is invalid. Current values:', this.signalForm().value());
 			this.ttForm()?.showErrorTooltips();
 			return;
 		}

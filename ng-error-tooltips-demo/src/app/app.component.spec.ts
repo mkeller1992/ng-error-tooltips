@@ -37,15 +37,15 @@ describe('AppComponent', () => {
       remove: {
         imports: [
           ErrorTooltipDirective,
-		  ErrorTooltipSigDirective,
-		  ErrorTooltipSigFormDirective
+          ErrorTooltipSigDirective,
+          ErrorTooltipSigFormDirective
         ]
       },
       add: {
         imports: [
           MockErrorTooltipDirective,
-		  MockErrorTooltipSigDirective,
-		  MockErrorTooltipSigFormDirective
+          MockErrorTooltipSigDirective,
+          MockErrorTooltipSigFormDirective
         ]
       }
     })

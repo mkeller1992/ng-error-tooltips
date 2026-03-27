@@ -9,6 +9,19 @@ An Angular library for **Reactive Forms** and **Signal Forms** that displays too
 The latest library version is compatible with **Angular 21**.  
 Starting with version **20.1.0**, `ng-error-tooltips` is fully **zoneless-compatible**.
 
+## ⚠️ Breaking Change (Signal Forms)
+
+Starting with version **21.3.x**, the `ErrorTooltipSigDirective` no longer reads the form field via `[formField]`.
+
+You must now explicitly pass the field using `[errorTooltipField]`:
+
+```html
+<input
+  [formField]="signalForm.name"
+  ngErrorTooltipSig
+  [errorTooltipField]="signalForm.name">
+```
+
 ---
 
 ## Demo
@@ -158,6 +171,7 @@ export class AppComponent {
   <input
     [formField]="signalForm.name"
     ngErrorTooltipSig
+    [errorTooltipField]="signalForm.name"    
     placeholder="Enter your name*"
     type="text">
 </div>

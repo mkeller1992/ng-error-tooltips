@@ -6,12 +6,9 @@ import { ErrorPayload } from './error-payload.type';
 import { defaultOptions } from './options/default-options.const';
 import { ErrorTooltipOptions } from './options/error-tooltip-options.interface';
 import { NgErrorTooltipComponent } from './tooltip/ng-error-tooltip.component';
-import { ValidationError } from '@angular/forms/signals';
+import { FieldTree } from '@angular/forms/signals';
 import { TriLangText } from './validators/tri-lang-text.type';
 
-type SignalFormField = {
-  	errors(): ValidationError.WithField[];
-};
 
 @Directive({
 	selector: '[ngErrorTooltipSig]',
@@ -26,7 +23,7 @@ export class ErrorTooltipSigDirective implements OnDestroy {
 	// Pass options as a single object:
 	readonly options = input<ErrorTooltipOptions>({});
 
-	readonly formField = input.required<() => SignalFormField>();
+	readonly errorTooltipField = input.required<FieldTree<unknown, string | number>>();
 	readonly id = input<string | number | null>(null);
 	readonly showFirstErrorOnly = input<boolean | null>(null);
 	readonly placement = input<Placement | null>(null);
@@ -60,7 +57,16 @@ export class ErrorTooltipSigDirective implements OnDestroy {
 	private formControlPosition = signal<DOMRect | null>(null);
 
 
-	private readonly field = computed<SignalFormField>(() => this.formField()());
+	private readonly field = computed(() => {
+		try {
+			return this.errorTooltipField()();
+		}
+		catch {
+			throw new Error(
+				'ngErrorTooltipSig requires [errorTooltipField]="..." on the same host element.'
+			);
+		}
+	});
 
 
 	private readonly errorPayloads = computed<ErrorPayload[]>(() => {

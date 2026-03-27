@@ -3,6 +3,7 @@ import { Component, DebugElement, provideZonelessChangeDetection, signal } from 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { Subject } from 'rxjs';
+import { FieldTree } from '@angular/forms/signals';
 
 import { ErrorTooltipSigDirective } from './error-tooltip-sig.directive';
 import { defaultOptions } from './options/default-options.const';
@@ -10,11 +11,9 @@ import { ErrorTooltipOptions } from './options/error-tooltip-options.interface';
 
 /**
  * Minimal shape expected by the directive.
- * (Matches: type SignalFormField = { errors(): ValidationError.WithField[]; })
+ * (Matches the callable FieldTree consumed via [errorTooltipField].)
  */
-type SignalFormFieldLike = {
-	errors(): any[];
-};
+type SignalFormFieldLike = FieldTree<unknown, string | number>;
 
 /**
  * Host A: binds BOTH [options] and [placement] (explicit placement wins)
@@ -25,7 +24,7 @@ type SignalFormFieldLike = {
 		<input
 			type="text"
 			ngErrorTooltipSig
-			[formField]="formField"
+			[errorTooltipField]="formField"
 			[options]="options()"
 			[placement]="placement">
 	`
@@ -40,12 +39,11 @@ class HostSigWithExplicitPlacementComponent {
 	// Errors backing signal
 	private readonly _errors = signal<any[]>([]);
 
-	// Must be a function returning a SignalFormField-like object.
-	// Directive expects: input.required<() => SignalFormField>()
-	formField = () =>
+	// Must be a callable FieldTree-like object.
+	formField = (() =>
 		({
 			errors: () => this._errors(),
-		} as SignalFormFieldLike);
+		})) as unknown as SignalFormFieldLike;
 
 	setErrors(errors: any[] | null) {
 		this._errors.set(errors ?? []);
@@ -63,7 +61,7 @@ class HostSigWithExplicitPlacementComponent {
 		<input
 			type="text"
 			ngErrorTooltipSig
-			[formField]="formField"
+			[errorTooltipField]="formField"
 			[options]="options()">
 	`
 })
@@ -71,10 +69,10 @@ class HostSigOptionsOnlyComponent {
 	options = signal<ErrorTooltipOptions>({ placement: 'top', zIndex: 2000 });
 	private readonly _errors = signal<any[]>([]);
 
-	formField = () =>
+	formField = (() =>
 		({
 			errors: () => this._errors(),
-		} as SignalFormFieldLike);
+		})) as unknown as SignalFormFieldLike;
 
 	setErrors(errors: any[] | null) {
 		this._errors.set(errors ?? []);

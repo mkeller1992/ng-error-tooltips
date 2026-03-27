@@ -114,6 +114,7 @@
 			#signalFormField
 			[formField]="signalForm.nameInput"
 			ngErrorTooltipSig
+			[errorTooltipField]="signalForm.nameInput"
 			[placement]="'right'"
 			class="form-control mb-3"
 			[class.invalid]="signalForm.nameInput().invalid() && signalForm.nameInput().touched()"
@@ -125,6 +126,7 @@
 			#signalFormField
 			[formField]="signalForm.ageInput"
 			ngErrorTooltipSig
+			[errorTooltipField]="signalForm.ageInput"
 			[options]="tooltipOptions"
 			class="form-control mb-3"
 			[class.invalid]="signalForm.ageInput().invalid() && signalForm.ageInput().touched()"
@@ -135,6 +137,7 @@
 			#signalFormField
 			[formField]="signalForm.employeeIdInput"
 			ngErrorTooltipSig
+			[errorTooltipField]="signalForm.employeeIdInput"
 			[placement]="'right'"
 			class="form-control"
 			[class.invalid]="signalForm.employeeIdInput().invalid() && signalForm.employeeIdInput().touched()"
@@ -148,6 +151,7 @@
 			#signalFormField
 			[formField]="signalForm.superior"
 			ngErrorTooltipSig
+			[errorTooltipField]="signalForm.superior"
 			[placement]="'right'"
 			class="form-control"
 			[class.invalid]="signalForm.superior().invalid() && signalForm.superior().touched()"

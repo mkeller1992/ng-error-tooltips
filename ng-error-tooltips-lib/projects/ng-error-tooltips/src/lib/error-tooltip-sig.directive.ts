@@ -34,6 +34,7 @@ export class ErrorTooltipSigDirective implements OnDestroy {
 	readonly width = input<string | null>(null);
 	readonly maxWidth = input<string | null>(null);
 	readonly pointerEvents = input<'auto' | 'none' | null>(null);
+	readonly appendTooltipToBody = input<boolean | null>(null);
 
 	// A merge of all options that were passed in various ways:
 	private readonly mergedOptions = computed<ErrorTooltipOptions>(() => ({
@@ -49,6 +50,7 @@ export class ErrorTooltipSigDirective implements OnDestroy {
 		...(this.width() != null ? { width: this.width()! } : {}),
 		...(this.maxWidth() != null ? { maxWidth: this.maxWidth()! } : {}),
 		...(this.pointerEvents() != null ? { pointerEvents: this.pointerEvents()! } : {}),
+		...(this.appendTooltipToBody() != null ? { appendTooltipToBody: this.appendTooltipToBody()! } : {}),
 	}));
 
 	// --- internal state ---
@@ -196,10 +198,10 @@ export class ErrorTooltipSigDirective implements OnDestroy {
 	}
 
 	private setupTooltipComponent(): void {
-    	// Create the component using the ViewContainerRef.
-    	// This way the component is automatically added to the change detection cycle of the Angular application
-    	const ref = this.viewContainerRef.createComponent(NgErrorTooltipComponent, { injector: this.injector });
-		
+		// Create the component using the ViewContainerRef.
+		// This way the component is automatically added to the change detection cycle of the Angular application
+		const ref = this.viewContainerRef.createComponent(NgErrorTooltipComponent, { injector: this.injector });
+
 		this.refToTooltip.set(ref);
 
 		const comp = this.tooltipComponent();
@@ -207,8 +209,22 @@ export class ErrorTooltipSigDirective implements OnDestroy {
 
 		this.attachListeners(comp, this.hostEl);
 
-    	// append to body
-    	document.body.appendChild(ref.location.nativeElement as HTMLElement);
+		const tooltipElement = ref.location.nativeElement as HTMLElement;
+		const appendTooltipToBody = this.mergedOptions().appendTooltipToBody ?? defaultOptions.appendTooltipToBody!;
+
+		if (appendTooltipToBody) {
+			document.body.appendChild(tooltipElement);
+		}
+		else {
+			const hostParent = this.hostEl.nativeElement.parentElement;
+
+			if (hostParent instanceof HTMLElement) {
+				hostParent.appendChild(tooltipElement);
+			}
+			else {
+				document.body.appendChild(tooltipElement);
+			}
+		}
 	}
 
 	private destroyTooltip(): void {

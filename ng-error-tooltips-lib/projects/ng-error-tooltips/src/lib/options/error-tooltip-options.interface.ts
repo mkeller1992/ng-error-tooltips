@@ -12,4 +12,6 @@ export interface ErrorTooltipOptions {
     width?: string;
     maxWidth?: string;
     pointerEvents?: "auto" | "none"; // 'none' would mean that there is no reaction to clicks
+
+    appendTooltipToBody?: boolean;
 }

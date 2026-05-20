@@ -32,6 +32,7 @@ export class ErrorTooltipDirective implements OnDestroy {
 	readonly width = input<string | null>(null);
 	readonly maxWidth = input<string | null>(null);
 	readonly pointerEvents = input<'auto' | 'none' | null>(null);
+	readonly appendTooltipToBody = input<boolean | null>(null);
 
 	private readonly mergedOptions = computed<ErrorTooltipOptions>(() => (
 		{
@@ -47,6 +48,7 @@ export class ErrorTooltipDirective implements OnDestroy {
 		...(this.width() != null ? { width: this.width()! } : {}),
 		...(this.maxWidth() != null ? { maxWidth: this.maxWidth()! } : {}),
 		...(this.pointerEvents() != null ? { pointerEvents: this.pointerEvents()! } : {}),
+		...(this.appendTooltipToBody() != null ? { appendTooltipToBody: this.appendTooltipToBody()! } : {}),
 	}));
 
 	// ---- internal state ----
@@ -178,7 +180,23 @@ export class ErrorTooltipDirective implements OnDestroy {
 		if (!comp) { return; }
 
 		this.attachListeners(comp);
-		document.body.appendChild(ref.location.nativeElement as HTMLElement);
+		
+		const tooltipElement = ref.location.nativeElement as HTMLElement;
+		const appendTooltipToBody = this.mergedOptions().appendTooltipToBody ?? defaultOptions.appendTooltipToBody!;
+
+		if (appendTooltipToBody) {
+			document.body.appendChild(tooltipElement);
+		}
+		else {
+			const hostParent = this.hostEl.nativeElement.parentElement;
+
+			if (hostParent instanceof HTMLElement) {
+				hostParent.appendChild(tooltipElement);
+			}
+			else {
+				document.body.appendChild(tooltipElement);
+			}
+		}
 	}
 
 	private attachListeners(tooltipComponent: NgErrorTooltipComponent): void {

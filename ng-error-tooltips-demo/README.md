@@ -243,6 +243,7 @@ Whenever the language signal changes, all visible error tooltips update automati
 | width | string | '' | Fixed width of the tooltip |
 | maxWidth | string | '350px' | Maximum width of the tooltip |
 | pointerEvents | "auto" \| "none" | 'auto' | Whether the tooltip reacts to pointer events |
+| appendTooltipToBody | boolean | true | Whether the tooltip should be appended to the document body. Set to `false` for Angular Material dialogs or other overlay-based components where body-appended tooltips may appear behind the overlay |
 
 ---
 

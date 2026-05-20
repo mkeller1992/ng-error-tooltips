@@ -14,6 +14,7 @@ import { Placement } from './placement.type';
 	host: {
 		'[class]': '_classList()',
 
+		'[style.position]': '_position()',
 		'[style.top]': '_hostTop()',
 		'[style.left]': '_hostLeft()',
 		'[style.zIndex]': '_zIndex()',
@@ -57,6 +58,7 @@ export class NgErrorTooltipComponent {
 	protected readonly _width = signal<string>('');
 	protected readonly _maxWidth = signal<string>(defaultOptions.maxWidth ?? '');
 	protected readonly _pointerEvents = signal<string>(defaultOptions.pointerEvents ?? 'auto');
+	protected readonly _position = signal<'absolute' | 'fixed'>('absolute');
 
 	private readonly _isShown = signal(false);
 	private readonly _displayNone = signal(true);
@@ -142,7 +144,9 @@ export class NgErrorTooltipComponent {
 
 		const tooltipHeight = tooltip.clientHeight;
 		const tooltipWidth = tooltip.clientWidth;
-		const scrollY = window.scrollY;
+		
+		const appendTooltipToBody = options?.appendTooltipToBody ?? defaultOptions.appendTooltipToBody!;
+		const scrollY = appendTooltipToBody ? window.scrollY : 0;
 
 		const placement = options?.placement ?? defaultOptions.placement!;
 		const tooltipOffset = options?.offset ?? defaultOptions.offset!;
@@ -223,6 +227,9 @@ export class NgErrorTooltipComponent {
 	private applyOptions(options: ErrorTooltipOptions) {
 		const zIndex = typeof options.zIndex === 'number' ? options.zIndex : (defaultOptions.zIndex ?? 0);
 		this._zIndex.set(zIndex);
+
+		const appendTooltipToBody = options.appendTooltipToBody ?? defaultOptions.appendTooltipToBody!;
+		this._position.set(appendTooltipToBody ? 'absolute' : 'fixed');
 
 		this._customClass.set(options.tooltipClass?.trim() ?? '');
 		this._pointerEvents.set(options.pointerEvents ?? defaultOptions.pointerEvents!);

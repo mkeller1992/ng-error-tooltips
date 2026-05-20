@@ -11,4 +11,6 @@ export const defaultOptions: ErrorTooltipOptions = {
 	offset: 8,
 	maxWidth: '350px',
 	pointerEvents: 'auto', // 'none' would mean that there is no reaction to clicks
+
+	appendTooltipToBody: true,
 }

@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { beforeAll, beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
+import type { Mock, MockInstance } from 'vitest';
 import { Component, DebugElement, provideZonelessChangeDetection, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -13,7 +15,8 @@ import { ErrorTooltipOptions } from './options/error-tooltip-options.interface';
  * Host A: binds BOTH [options] and [placement] (explicit placement wins)
  */
 @Component({
-	standalone: false,
+	standalone: true,
+	imports: [ReactiveFormsModule, ErrorTooltipDirective],
 	template: `
 		<form [formGroup]="form" (ngSubmit)="noop()">
 			<input
@@ -44,7 +47,8 @@ class HostWithExplicitPlacementComponent {
  * Host B: binds ONLY [options] (options.placement may change tooltip placement)
  */
 @Component({
-	standalone: false,
+	standalone: true,
+	imports: [ReactiveFormsModule, ErrorTooltipDirective],
 	template: `
 		<form [formGroup]="form" (ngSubmit)="noop()">
 			<input
@@ -85,9 +89,9 @@ async function flush(): Promise<void> {
 	// Let already-queued microtasks run
 	await Promise.resolve();
 
-	const j: any = jest;
+	const j: any = vi;
 
-	// Jest fake timers path
+	// Vitest fake timers path
 	if (typeof j.getTimerCount === 'function') {
 		// Run timers scheduled so far (setTimeout/RAF mocks)
 		j.runOnlyPendingTimers();
@@ -119,7 +123,7 @@ async function flush2(): Promise<void> {
 
 function mockAsyncRaf(): { restore: () => void } {
 	const original = global.requestAnimationFrame;
-	const spy = jest.spyOn(global, 'requestAnimationFrame').mockImplementation(((cb: FrameRequestCallback): number => {
+	const spy = vi.spyOn(global, 'requestAnimationFrame').mockImplementation(((cb: FrameRequestCallback): number => {
 		setTimeout(() => cb(0), 0);
 		return 0;
 	}) as any);
@@ -133,16 +137,16 @@ function mockAsyncRaf(): { restore: () => void } {
 }
 
 function makeFakeTooltipRef() {
-	const setInputMock = jest.fn();
+	const setInputMock = vi.fn();
 
 	const fakeComponentRef = {
 		instance: {
-			showTooltip: jest.fn(),
-			setVisibilityAndPosition: jest.fn(),
+			showTooltip: vi.fn(),
+			setVisibilityAndPosition: vi.fn(),
 			userClickOnTooltip$: new Subject<void>(),
 		},
 		setInput: setInputMock,
-		destroy: jest.fn(),
+		destroy: vi.fn(),
 		location: { nativeElement: document.createElement('div') },
 	};
 
@@ -154,12 +158,12 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
-	jest.restoreAllMocks();
-	jest.useFakeTimers();
+	vi.restoreAllMocks();
+	vi.useFakeTimers();
 });
 
 afterEach(() => {
-	jest.useRealTimers();
+	vi.useRealTimers();
 });
 
 async function setupHarness<THost>(
@@ -172,15 +176,14 @@ async function setupHarness<THost>(
 	setErrors: (errors: any) => Promise<void>;
 	getFormDir: () => FormGroupDirective;
 	installFakeTooltipLifecycle: () => {
-		setInputMock: jest.Mock;
+		setInputMock: Mock;
 		fakeComponentRef: any;
-		appendSpy: jest.SpyInstance;
+		appendSpy: MockInstance;
 		raf: { restore: () => void };
 	};
 }> {
 	await TestBed.configureTestingModule({
-		declarations: [hostType],
-		imports: [ErrorTooltipDirective, ReactiveFormsModule],
+		imports: [hostType],
 		providers: [provideZonelessChangeDetection(), FormBuilder],
 	}).compileComponents();
 
@@ -204,7 +207,7 @@ async function setupHarness<THost>(
 	const installFakeTooltipLifecycle = () => {
 		const raf = mockAsyncRaf();
 		const { fakeComponentRef, setInputMock } = makeFakeTooltipRef();
-		const appendSpy = jest.spyOn(document.body, 'appendChild');
+		const appendSpy = vi.spyOn(document.body, 'appendChild');
 
 		/**
 		 * Patch setupTooltipComponent() so no real component is created.
@@ -240,8 +243,7 @@ describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host WITH e
 
 	it('should prefer explicit input bindings over options object and defaults', async () => {
 		await TestBed.configureTestingModule({
-			declarations: [HostWithExplicitPlacementComponent],
-			imports: [ErrorTooltipDirective, ReactiveFormsModule],
+			imports: [HostWithExplicitPlacementComponent],
 			providers: [provideZonelessChangeDetection(), FormBuilder],
 		}).compileComponents();
 
@@ -273,9 +275,9 @@ describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host WITH e
 		directive.showErrorTooltip();
 		await flush2(); // let setup + RAF callback + effects run
 
-		const optionCalls = setInputMock.mock.calls.filter(c => c[0] === 'options');
-		const errorsCalls = setInputMock.mock.calls.filter(c => c[0] === 'errors');
-		const fcCalls = setInputMock.mock.calls.filter(c => c[0] === 'formControl');
+		const optionCalls = setInputMock.mock.calls.filter((c: string[]) => c[0] === 'options');
+		const errorsCalls = setInputMock.mock.calls.filter((c: string[]) => c[0] === 'errors');
+		const fcCalls = setInputMock.mock.calls.filter((c: string[]) => c[0] === 'formControl');
 
 		expect(optionCalls.length).toBeGreaterThan(0);
 		expect(errorsCalls.length).toBeGreaterThan(0);
@@ -291,7 +293,7 @@ describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host WITH e
 	it('should call displayTooltip when errors exist', async () => {
 		const { directive, setErrors } = await setupHarness(HostWithExplicitPlacementComponent);
 
-		const spy = jest.spyOn(directive as any, 'displayTooltip').mockImplementation(() => {});
+		const spy = vi.spyOn(directive as any, 'displayTooltip').mockImplementation(() => {});
 		await setErrors({ required: 'Error' });
 
 		directive.showErrorTooltip();
@@ -301,7 +303,7 @@ describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host WITH e
 	it('should NOT call displayTooltip when no errors exist', async () => {
 		const { directive, setErrors } = await setupHarness(HostWithExplicitPlacementComponent);
 
-		const spy = jest.spyOn(directive as any, 'displayTooltip').mockImplementation(() => {});
+		const spy = vi.spyOn(directive as any, 'displayTooltip').mockImplementation(() => {});
 		await setErrors(null);
 
 		directive.showErrorTooltip();
@@ -365,8 +367,7 @@ describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host WITH e
 	it('should update tooltip options when options change but keep placement from explicit input', async () => {
 		// Avoid NG0100: set placement before first detectChanges
 		await TestBed.configureTestingModule({
-			declarations: [HostWithExplicitPlacementComponent],
-			imports: [ErrorTooltipDirective, ReactiveFormsModule],
+			imports: [HostWithExplicitPlacementComponent],
 			providers: [provideZonelessChangeDetection(), FormBuilder],
 		}).compileComponents();
 
@@ -388,7 +389,7 @@ describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host WITH e
 
 		const raf = mockAsyncRaf();
 		const { fakeComponentRef, setInputMock } = makeFakeTooltipRef();
-		const appendSpy = jest.spyOn(document.body, 'appendChild');
+		const appendSpy = vi.spyOn(document.body, 'appendChild');
 
 		(directive as any).setupTooltipComponent = () => {
 			(directive as any).refToTooltip.set(fakeComponentRef);
@@ -417,7 +418,7 @@ describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host WITH e
 	it('should display tooltip on form submit if errors exist', async () => {
 		const { directive, setErrors, getFormDir } = await setupHarness(HostWithExplicitPlacementComponent);
 
-		const spy = jest.spyOn(directive as any, 'displayTooltip').mockImplementation(() => {});
+		const spy = vi.spyOn(directive as any, 'displayTooltip').mockImplementation(() => {});
 		await setErrors({ required: 'Required' });
 
 		getFormDir().ngSubmit.emit();
@@ -429,7 +430,7 @@ describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host WITH e
 	it('should NOT show tooltip on form submit when control has no errors', async () => {
 		const { directive, setErrors, getFormDir } = await setupHarness(HostWithExplicitPlacementComponent);
 
-		const spy = jest.spyOn(directive as any, 'displayTooltip').mockImplementation(() => {});
+		const spy = vi.spyOn(directive as any, 'displayTooltip').mockImplementation(() => {});
 		await setErrors(null);
 
 		getFormDir().ngSubmit.emit();
@@ -441,12 +442,12 @@ describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host WITH e
 	it('should destroy tooltip component correctly', async () => {
 		const { directive } = await setupHarness(HostWithExplicitPlacementComponent);
 
-		const destroyMock = jest.fn();
-		const nextSpy = jest.spyOn((directive as any).tooltipDestroyed$, 'next');
+		const destroyMock = vi.fn();
+		const nextSpy = vi.spyOn((directive as any).tooltipDestroyed$, 'next');
 
 		(directive as any).refToTooltip.set({
 			instance: {},
-			setInput: jest.fn(),
+			setInput: vi.fn(),
 			destroy: destroyMock,
 			location: { nativeElement: document.createElement('div') },
 		});
@@ -481,7 +482,7 @@ describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host OPTION
 
 		const raf = mockAsyncRaf();
 		const { fakeComponentRef, setInputMock } = makeFakeTooltipRef();
-		jest.spyOn(document.body, 'appendChild');
+		vi.spyOn(document.body, 'appendChild');
 
 		(directive as any).setupTooltipComponent = () => {
 			(directive as any).refToTooltip.set(fakeComponentRef);

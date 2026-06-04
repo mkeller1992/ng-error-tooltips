@@ -15,7 +15,7 @@ interface Employee {
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, ReactiveFormsModule, FormField, ErrorTooltipDirective, ErrorTooltipSigDirective,
 	ErrorTooltipSigFormDirective
   ],

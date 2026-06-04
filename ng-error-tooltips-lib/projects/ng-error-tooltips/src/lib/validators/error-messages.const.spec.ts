@@ -1,3 +1,4 @@
+import { describe, expect, it, vi } from 'vitest';
 import { ERROR_MESSAGES, formatNumber, isTriLangText, tri } from './error-messages.const';
 
 describe('error-messages.const', () => {
@@ -15,13 +16,16 @@ describe('error-messages.const', () => {
 
 	describe('formatNumber', () => {
 		it('should format using Intl.NumberFormat (mocked) without decimals', () => {
-			const nfSpy = jest.spyOn(Intl, 'NumberFormat').mockImplementation((() => {
+			const nfSpy = vi.spyOn(Intl, 'NumberFormat').mockImplementation(function () {
 				return { format: (n: number) => `FMT(${n})` } as any;
-			}) as any);
+			} as any);
 
-			expect(formatNumber(1234)).toBe('FMT(1234)');
-
-			nfSpy.mockRestore();
+			try {
+				expect(formatNumber(1234)).toBe('FMT(1234)');
+			}
+			finally {
+				nfSpy.mockRestore();
+			}
 		});
 	});
 
@@ -36,16 +40,19 @@ describe('error-messages.const', () => {
 		});
 
 		it('should pass args to all languages for MsgFn1 keys', () => {
-			const nfSpy = jest.spyOn(Intl, 'NumberFormat').mockImplementation((() => {
+			const nfSpy = vi.spyOn(Intl, 'NumberFormat').mockImplementation(function () {
 				return { format: (n: number) => `N(${n})` } as any;
-			}) as any);
+			} as any);
 
-			const t = tri('minLength', 1000);
-			expect(t.de).toContain('N(1000)');
-			expect(t.fr).toContain('N(1000)');
-			expect(t.en).toContain('N(1000)');
-
-			nfSpy.mockRestore();
+			try {
+				const t = tri('minLength', 1000);
+				expect(t.de).toContain('N(1000)');
+				expect(t.fr).toContain('N(1000)');
+				expect(t.en).toContain('N(1000)');
+			}
+			finally {
+				nfSpy.mockRestore();
+			}
 		});
 	});
 });

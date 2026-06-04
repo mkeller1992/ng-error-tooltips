@@ -55,6 +55,7 @@
             },
             "development": {
               "optimization": false,
+              "outputHashing": "none",
               "extractLicenses": false,
               "sourceMap": true
             }
@@ -68,7 +69,9 @@
               "buildTarget": "ng-error-tooltips-demo:build:production"
             },
             "development": {
-              "buildTarget": "ng-error-tooltips-demo:build:development"
+              "buildTarget": "ng-error-tooltips-demo:build:development",
+              "hmr": true,
+              "prebundle": false
             }
           },
           "defaultConfiguration": "development"
@@ -77,24 +80,25 @@
           "builder": "@angular/build:extract-i18n"
         },
         "test": {
-          "builder": "@nrwl/jest:jest",
+          "builder": "@angular/build:unit-test",
           "options": {
-            "polyfills": [],
-			"configPath": "jest.config.ts",
             "tsConfig": "tsconfig.spec.json",
-            "inlineStyleLanguage": "scss",
-            "assets": [
-              {
-                "glob": "**/*",
-                "input": "public"
-              }
+            "runnerConfig": "vitest.config.ts",
+            "providersFile": "src/test-providers.ts",
+            "coverage": true,
+            "coverageInclude": [
+              "src/app/**/*.ts"
             ],
-            "styles": [
-              "node_modules/bootstrap/dist/css/bootstrap.min.css",
-              "src/styles.scss"
+            "coverageExclude": [
+              "src/app/**/*.spec.ts",
+              "src/app/**/*.routes.ts",
+              "src/test-providers.ts"
             ],
-            "scripts": [
-              "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"
+            "coverageReporters": [
+              "html",
+              "text",
+              "text-summary",
+              "lcov"
             ]
           }
         }

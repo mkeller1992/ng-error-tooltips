@@ -1,13 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { beforeAll, beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
+import type { Mock, MockInstance } from 'vitest';
 import { Component, DebugElement, provideZonelessChangeDetection, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { Subject } from 'rxjs';
-import { FieldTree } from '@angular/forms/signals';
+import { FieldTree, form, FormField } from '@angular/forms/signals';
 
 import { ErrorTooltipSigDirective } from './error-tooltip-sig.directive';
 import { defaultOptions } from './options/default-options.const';
 import { ErrorTooltipOptions } from './options/error-tooltip-options.interface';
+import { ErrorTooltipSigFormDirective } from './error-tooltip-sig-form.directive';
 
 /**
  * Minimal shape expected by the directive.
@@ -19,17 +22,25 @@ type SignalFormFieldLike = FieldTree<unknown, string | number>;
  * Host A: binds BOTH [options] and [placement] (explicit placement wins)
  */
 @Component({
-	standalone: false,
+	standalone: true,
+	imports: [FormField, ErrorTooltipSigDirective, ErrorTooltipSigFormDirective],
 	template: `
-		<input
-			type="text"
-			ngErrorTooltipSig
-			[errorTooltipField]="formField"
-			[options]="options()"
-			[placement]="placement">
+		<div ngErrorTooltipSigForm>
+			<input
+				type="text"
+				[formField]="signalForm.nameInput"
+				ngErrorTooltipSig
+				[errorTooltipField]="errorTooltipField"
+				[options]="options()"
+				[placement]="placement">
+		</div>
 	`
 })
 class HostSigWithExplicitPlacementComponent {
+	private readonly model = signal({ nameInput: '' });
+
+	signalForm = form(this.model);
+
 	// Options are signals (just like your real app usage)
 	options = signal<ErrorTooltipOptions>({ placement: 'top', zIndex: 2000 });
 
@@ -40,7 +51,7 @@ class HostSigWithExplicitPlacementComponent {
 	private readonly _errors = signal<any[]>([]);
 
 	// Must be a callable FieldTree-like object.
-	formField = (() =>
+	errorTooltipField = (() =>
 		({
 			errors: () => this._errors(),
 		})) as unknown as SignalFormFieldLike;
@@ -56,20 +67,29 @@ class HostSigWithExplicitPlacementComponent {
  * Host B: binds ONLY [options] (options.placement may change tooltip placement)
  */
 @Component({
-	standalone: false,
+	standalone: true,
+	imports: [FormField, ErrorTooltipSigDirective, ErrorTooltipSigFormDirective],
 	template: `
-		<input
-			type="text"
-			ngErrorTooltipSig
-			[errorTooltipField]="formField"
-			[options]="options()">
+		<div ngErrorTooltipSigForm>
+			<input
+				type="text"
+				[formField]="signalForm.nameInput"
+				ngErrorTooltipSig
+				[errorTooltipField]="errorTooltipField"
+				[options]="options()">
+		</div>
 	`
 })
 class HostSigOptionsOnlyComponent {
+	private readonly model = signal({ nameInput: '' });
+
+	signalForm = form(this.model);
+
 	options = signal<ErrorTooltipOptions>({ placement: 'top', zIndex: 2000 });
+
 	private readonly _errors = signal<any[]>([]);
 
-	formField = (() =>
+	errorTooltipField = (() =>
 		({
 			errors: () => this._errors(),
 		})) as unknown as SignalFormFieldLike;
@@ -99,9 +119,9 @@ async function flush(): Promise<void> {
 	// Let already-queued microtasks run
 	await Promise.resolve();
 
-	const j: any = jest;
+	const j: any = vi;
 
-	// Jest fake timers path
+	// Vitest fake timers path
 	if (typeof j.getTimerCount === 'function') {
 		j.runOnlyPendingTimers();
 		await Promise.resolve();
@@ -128,7 +148,7 @@ async function flush2(): Promise<void> {
 
 function mockAsyncRaf(): { restore: () => void } {
 	const original = global.requestAnimationFrame;
-	const spy = jest.spyOn(global, 'requestAnimationFrame').mockImplementation(((cb: FrameRequestCallback): number => {
+	const spy = vi.spyOn(global, 'requestAnimationFrame').mockImplementation(((cb: FrameRequestCallback): number => {
 		setTimeout(() => cb(0), 0);
 		return 0;
 	}) as any);
@@ -142,17 +162,17 @@ function mockAsyncRaf(): { restore: () => void } {
 }
 
 function makeFakeTooltipRef() {
-	const setInputMock = jest.fn();
+	const setInputMock = vi.fn();
 
 	const fakeComponentRef = {
 		instance: {
-			showTooltip: jest.fn(),
-			setVisibilityAndPosition: jest.fn(),
+			showTooltip: vi.fn(),
+			setVisibilityAndPosition: vi.fn(),
 			userClickOnTooltip$: new Subject<void>(),
-			hasErrors: jest.fn(() => true),
+			hasErrors: vi.fn(() => true),
 		},
 		setInput: setInputMock,
-		destroy: jest.fn(),
+		destroy: vi.fn(),
 		location: { nativeElement: document.createElement('div') },
 	};
 
@@ -164,12 +184,12 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
-	jest.restoreAllMocks();
-	jest.useFakeTimers();
+	vi.restoreAllMocks();
+	vi.useFakeTimers();
 });
 
 afterEach(() => {
-	jest.useRealTimers();
+	vi.useRealTimers();
 });
 
 async function setupHarness<THost extends { setErrors: (e: any[] | null) => void }>(
@@ -181,15 +201,14 @@ async function setupHarness<THost extends { setErrors: (e: any[] | null) => void
 	directive: ErrorTooltipSigDirective;
 	setErrors: (errors: any[] | null) => Promise<void>;
 	installFakeTooltipLifecycle: () => {
-		setInputMock: jest.Mock;
+		setInputMock: Mock;
 		fakeComponentRef: any;
-		appendSpy: jest.SpyInstance;
+		appendSpy: MockInstance;
 		raf: { restore: () => void };
 	};
 }> {
 	await TestBed.configureTestingModule({
-		declarations: [hostType],
-		imports: [ErrorTooltipSigDirective],
+		imports: [hostType],
 		providers: [provideZonelessChangeDetection()],
 	}).compileComponents();
 
@@ -209,7 +228,7 @@ async function setupHarness<THost extends { setErrors: (e: any[] | null) => void
 	const installFakeTooltipLifecycle = () => {
 		const raf = mockAsyncRaf();
 		const { fakeComponentRef, setInputMock } = makeFakeTooltipRef();
-		const appendSpy = jest.spyOn(document.body, 'appendChild');
+		const appendSpy = vi.spyOn(document.body, 'appendChild');
 
 		/**
 		 * Patch setupTooltipComponent() so no real component is created.
@@ -245,8 +264,7 @@ describe('ErrorTooltipSigDirective (signals forms, zoneless) — host WITH expli
 
 	it('should prefer explicit input bindings over options object and defaults', async () => {
 		await TestBed.configureTestingModule({
-			declarations: [HostSigWithExplicitPlacementComponent],
-			imports: [ErrorTooltipSigDirective],
+			imports: [HostSigWithExplicitPlacementComponent],
 			providers: [provideZonelessChangeDetection()],
 		}).compileComponents();
 
@@ -280,9 +298,9 @@ describe('ErrorTooltipSigDirective (signals forms, zoneless) — host WITH expli
 		directive.showErrorTooltip();
 		await flush2(); // let setup + RAF callback + effects run
 
-		const optionCalls = setInputMock.mock.calls.filter(c => c[0] === 'options');
-		const errorsCalls = setInputMock.mock.calls.filter(c => c[0] === 'errors');
-		const fcCalls = setInputMock.mock.calls.filter(c => c[0] === 'formControl');
+		const optionCalls = setInputMock.mock.calls.filter((c: string[]) => c[0] === 'options');
+		const errorsCalls = setInputMock.mock.calls.filter((c: string[]) => c[0] === 'errors');
+		const fcCalls = setInputMock.mock.calls.filter((c: string[]) => c[0] === 'formControl');
 
 		expect(optionCalls.length).toBeGreaterThan(0);
 		expect(errorsCalls.length).toBeGreaterThan(0);
@@ -298,7 +316,7 @@ describe('ErrorTooltipSigDirective (signals forms, zoneless) — host WITH expli
 	it('should call displayTooltip when errors exist', async () => {
 		const { directive, setErrors } = await setupHarness(HostSigWithExplicitPlacementComponent);
 
-		const spy = jest.spyOn(directive as any, 'displayTooltip').mockImplementation(() => {});
+		const spy = vi.spyOn(directive as any, 'displayTooltip').mockImplementation(() => {});
 		await setErrors([{ message: 'E1' }]);
 
 		directive.showErrorTooltip();
@@ -308,7 +326,7 @@ describe('ErrorTooltipSigDirective (signals forms, zoneless) — host WITH expli
 	it('should NOT call displayTooltip when no errors exist', async () => {
 		const { directive, setErrors } = await setupHarness(HostSigWithExplicitPlacementComponent);
 
-		const spy = jest.spyOn(directive as any, 'displayTooltip').mockImplementation(() => {});
+		const spy = vi.spyOn(directive as any, 'displayTooltip').mockImplementation(() => {});
 		await setErrors([]);
 
 		directive.showErrorTooltip();
@@ -352,8 +370,7 @@ describe('ErrorTooltipSigDirective (signals forms, zoneless) — host WITH expli
 	it('should update tooltip options when options change but keep placement from explicit input', async () => {
 		// Avoid NG0100: set placement before first detectChanges
 		await TestBed.configureTestingModule({
-			declarations: [HostSigWithExplicitPlacementComponent],
-			imports: [ErrorTooltipSigDirective],
+			imports: [HostSigWithExplicitPlacementComponent],
 			providers: [provideZonelessChangeDetection()],
 		}).compileComponents();
 
@@ -375,7 +392,7 @@ describe('ErrorTooltipSigDirective (signals forms, zoneless) — host WITH expli
 
 		const raf = mockAsyncRaf();
 		const { fakeComponentRef, setInputMock } = makeFakeTooltipRef();
-		const appendSpy = jest.spyOn(document.body, 'appendChild');
+		const appendSpy = vi.spyOn(document.body, 'appendChild');
 
 		(directive as any).setupTooltipComponent = () => {
 			(directive as any).refToTooltip.set(fakeComponentRef);
@@ -405,11 +422,11 @@ describe('ErrorTooltipSigDirective (signals forms, zoneless) — host WITH expli
 	it('should destroy tooltip component correctly', async () => {
 		const { directive } = await setupHarness(HostSigWithExplicitPlacementComponent);
 
-		const destroyMock = jest.fn();
+		const destroyMock = vi.fn();
 
 		(directive as any).refToTooltip.set({
 			instance: {},
-			setInput: jest.fn(),
+			setInput: vi.fn(),
 			destroy: destroyMock,
 			location: { nativeElement: document.createElement('div') },
 		});
@@ -454,8 +471,8 @@ describe('ErrorTooltipSigDirective (signals forms, zoneless) — host OPTIONS ON
 		await flush2();
 
 		const optionCalls = setInputMock.mock.calls
-			.filter(c => c[0] === 'options')
-			.map(c => c[1] as ErrorTooltipOptions);
+			.filter((c: string[]) => c[0] === 'options')
+			.map((c: ErrorTooltipOptions[]) => c[1] as ErrorTooltipOptions);
 
 		const last = optionCalls[optionCalls.length - 1];
 		expect(last.placement).toBe('bottom');

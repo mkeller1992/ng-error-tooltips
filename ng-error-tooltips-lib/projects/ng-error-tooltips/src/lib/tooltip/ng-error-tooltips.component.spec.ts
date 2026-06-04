@@ -1,3 +1,4 @@
+import { beforeAll, beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection, ElementRef } from '@angular/core';
 import { firstValueFrom, take } from 'rxjs';
@@ -19,7 +20,7 @@ describe('NgErrorTooltipComponent (signal inputs + host:{})', () => {
 	});
 
 	beforeEach(async () => {
-		jest.useFakeTimers(); // needed for async re-positioning
+		vi.useFakeTimers(); // needed for async re-positioning
 
 		await TestBed.configureTestingModule({
 			imports: [NgErrorTooltipComponent],
@@ -38,7 +39,7 @@ describe('NgErrorTooltipComponent (signal inputs + host:{})', () => {
 	});
 
 	afterEach(() => {
-		jest.useRealTimers();
+		vi.useRealTimers();
 	});
 
 	function hostEl(): HTMLElement {
@@ -168,7 +169,7 @@ describe('NgErrorTooltipComponent (signal inputs + host:{})', () => {
 		component.showTooltip(control);
 
 		// showTooltip -> setVisibilityAndPosition -> may setTimeout(0)
-		jest.runOnlyPendingTimers();
+		vi.runOnlyPendingTimers();
 		fixture.detectChanges();
 
 		expect(hostClasses()).toContain('tooltip-show');
@@ -185,7 +186,7 @@ describe('NgErrorTooltipComponent (signal inputs + host:{})', () => {
 		(document.elementFromPoint as any) = () => document.createElement('div');
 
 		component.showTooltip(control);
-		jest.runOnlyPendingTimers();
+		vi.runOnlyPendingTimers();
 		fixture.detectChanges();
 
 		expect(hostClasses()).toContain('tooltip-hide');
@@ -210,7 +211,7 @@ describe('NgErrorTooltipComponent (signal inputs + host:{})', () => {
 		setTooltipSize(120, 40);
 
 		component.showTooltip(control);
-		jest.runOnlyPendingTimers();
+		vi.runOnlyPendingTimers();
 		fixture.detectChanges();
 
 		const expectedTop = 100 + 30 + (defaultOptions.offset ?? 0);
@@ -233,7 +234,7 @@ describe('NgErrorTooltipComponent (signal inputs + host:{})', () => {
 		setTooltipSize(80, 40);
 
 		component.showTooltip(control);
-		jest.runOnlyPendingTimers();
+		vi.runOnlyPendingTimers();
 		fixture.detectChanges();
 
 		const expectedLeft = 50 - 80 - (defaultOptions.offset ?? 0);

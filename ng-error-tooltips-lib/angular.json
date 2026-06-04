@@ -23,13 +23,33 @@
           },
           "defaultConfiguration": "production"
         },
-        "test": {
-          "builder": "@nrwl/jest:jest",
-          "options": {
-            "configPath": "../../jest.config.ts",
-            "polyfills": []
-          }
-        }
+		"test": {
+			"builder": "@angular/build:unit-test",
+			"options": {
+				"tsConfig": "tsconfig.spec.json",
+				"runnerConfig": "vitest.config.ts",
+				"providersFile": "projects/ng-error-tooltips/src/test-providers.ts",
+				"coverage": true,
+				"coverageInclude": [
+					"projects/ng-error-tooltips/src/**/*.ts"
+				],
+				"coverageExclude": [
+					"projects/ng-error-tooltips/src/**/*.spec.ts",
+					"projects/ng-error-tooltips/src/test-providers.ts",
+					"projects/ng-error-tooltips/src/public-api.ts",
+					"projects/ng-error-tooltips/src/lib/**/*.module.ts",
+					"projects/ng-error-tooltips/src/lib/**/mocks/**/*.ts",
+					"projects/ng-error-tooltips/src/lib/tooltip/placement.type.ts",
+					"projects/ng-error-tooltips/src/lib/provide-error-tooltips.ts"
+				],
+				"coverageReporters": [
+					"html",
+					"text",
+					"text-summary",
+					"lcov"
+				]
+			}
+		}
       }
     }
   },

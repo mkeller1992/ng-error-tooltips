@@ -6,7 +6,7 @@
 
 An Angular library for **Reactive Forms** and **Signal Forms** that displays tooltips on form inputs with errors.
 
-The latest library version is compatible with **Angular 21**.  
+The latest library version is compatible with **Angular 22**.  
 Starting with version **20.1.0**, `ng-error-tooltips` is fully **zoneless-compatible**.
 
 ## ⚠️ Breaking Change (Signal Forms)
@@ -247,7 +247,7 @@ Whenever the language signal changes, all visible error tooltips update automati
 
 ---
 
-## Angular Jest unit tests
+## Angular Vitest unit tests
 
 ### Mocking `ErrorTooltipDirective` (Reactive Forms)
 

@@ -1,43 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { SchemaPath } from '@angular/forms/signals';
 
 import { CustomSigValidators } from './custom-sig-validators';
+import { ERROR_MESSAGES, tri } from './error-messages.const';
 import { ERROR_TOOLTIP_SIG_VALIDATE } from '../error-tooltip-sig-validate.token';
-
-// Make error messages deterministic
-jest.mock('./error-messages.const', () => ({
-	ERROR_MESSAGES: {
-		required: { de: () => 'required-msg' },
-		trueRequired: { de: () => 'trueRequired-msg' },
-
-		minLength: { de: (n: number) => `minLength-${n}` },
-		maxLength: { de: (n: number) => `maxLength-${n}` },
-
-		smallerThan: { de: (n: number) => `smallerThan-${n}` },
-		formattedSmallerThan: { de: (n: number) => `formattedSmallerThan-${n}` },
-
-		greaterThan: { de: (n: number) => `greaterThan-${n}` },
-		formattedGreaterThan: { de: (n: number) => `formattedGreaterThan-${n}` },
-
-		minValue: { de: (n: number) => `minValue-${n}` },
-		formattedMinValue: { de: (n: number) => `formattedMinValue-${n}` },
-
-		maxValue: { de: (n: number) => `maxValue-${n}` },
-		formattedMaxValue: { de: (n: number) => `formattedMaxValue-${n}` },
-
-		lettersOnly: { de: () => 'lettersOnly-msg' },
-		invalidEmail: { de: () => 'invalidEmail-msg' },
-
-		minNumberOfDigits: { de: (n: number) => `minDigits-${n}` },
-		minNumberOfCapitalLetters: { de: (n: number) => `minCaps-${n}` },
-	},
-	tri: (key: string, arg?: number) => ({
-		de: `${key}-de${arg != null ? `-${arg}` : ''}`,
-		fr: `${key}-fr${arg != null ? `-${arg}` : ''}`,
-		en: `${key}-en${arg != null ? `-${arg}` : ''}`,
-	}),
-}));
 
 type ValidateFn = (path: any, validator: (ctx: { value: () => any }) => any) => void;
 
@@ -47,10 +15,7 @@ describe('CustomSigValidators', () => {
 	// Captures the last validator function registered via ERROR_TOOLTIP_SIG_VALIDATE
 	let capturedValidator: ((ctx: { value: () => any }) => any) | null = null;
 
-	const validateMock = jest.fn<ReturnType<ValidateFn>, Parameters<ValidateFn>>((_path, fn) => {
-		capturedValidator = fn;
-	});
-
+	const validateMock = vi.fn<ValidateFn>((_path, fn) => { capturedValidator = fn; });
 	const dummyPath = {} as SchemaPath<any>;
 
 	function runWithValue<T>(value: T): any {
@@ -61,7 +26,7 @@ describe('CustomSigValidators', () => {
 	}
 
 	beforeEach(() => {
-		jest.restoreAllMocks();
+		vi.clearAllMocks();
 		capturedValidator = null;
 
 		TestBed.configureTestingModule({
@@ -83,13 +48,13 @@ describe('CustomSigValidators', () => {
 		expect(runWithValue('abc')).toBeUndefined();
 
 		svc.required(dummyPath);
-		expect(runWithValue('')).toEqual({ kind: 'required', message: 'required-msg' });
+		expect(runWithValue('')).toEqual({ kind: 'required', message: ERROR_MESSAGES.required.de() });
 
 		svc.required(dummyPath);
-		expect(runWithValue(null)).toEqual({ kind: 'required', message: 'required-msg' });
+		expect(runWithValue(null)).toEqual({ kind: 'required', message: ERROR_MESSAGES.required.de() });
 
 		svc.required(dummyPath);
-		expect(runWithValue([])).toEqual({ kind: 'required', message: 'required-msg' });
+		expect(runWithValue([])).toEqual({ kind: 'required', message: ERROR_MESSAGES.required.de() });
 	});
 
 	it('should validate trueRequired correctly', () => {
@@ -97,13 +62,13 @@ describe('CustomSigValidators', () => {
 		expect(runWithValue(true)).toBeUndefined();
 
 		svc.trueRequired(dummyPath as any);
-		expect(runWithValue(false)).toEqual({ kind: 'trueRequired', message: 'trueRequired-msg' });
+		expect(runWithValue(false)).toEqual({ kind: 'trueRequired', message: ERROR_MESSAGES.trueRequired.de() });
 
 		svc.trueRequired(dummyPath as any);
-		expect(runWithValue(null)).toEqual({ kind: 'trueRequired', message: 'trueRequired-msg' });
+		expect(runWithValue(null)).toEqual({ kind: 'trueRequired', message: ERROR_MESSAGES.trueRequired.de() });
 
 		svc.trueRequired(dummyPath as any);
-		expect(runWithValue(undefined)).toEqual({ kind: 'trueRequired', message: 'trueRequired-msg' });
+		expect(runWithValue(undefined)).toEqual({ kind: 'trueRequired', message: ERROR_MESSAGES.trueRequired.de() });
 	});
 
 	it('should validate minLength correctly', () => {
@@ -111,7 +76,7 @@ describe('CustomSigValidators', () => {
 		expect(runWithValue('abcdef')).toBeUndefined();
 
 		svc.minLength(dummyPath as any, 5);
-		expect(runWithValue('abc')).toEqual({ kind: 'minLength', message: 'minLength-5' });
+		expect(runWithValue('abc')).toEqual({ kind: 'minLength', message: ERROR_MESSAGES.minLength.de(5) });
 	});
 
 	it('should validate maxLength correctly', () => {
@@ -119,7 +84,7 @@ describe('CustomSigValidators', () => {
 		expect(runWithValue('abc')).toBeUndefined();
 
 		svc.maxLength(dummyPath as any, 5);
-		expect(runWithValue('abcdef')).toEqual({ kind: 'maxLength', message: 'maxLength-5' });
+		expect(runWithValue('abcdef')).toEqual({ kind: 'maxLength', message: ERROR_MESSAGES.maxLength.de(5) });
 	});
 
 	it('should validate smallerThan correctly', () => {
@@ -127,7 +92,7 @@ describe('CustomSigValidators', () => {
 		expect(runWithValue(2)).toBeUndefined();
 
 		svc.smallerThan(dummyPath, 5);
-		expect(runWithValue(6)).toEqual({ kind: 'smallerThan', message: 'smallerThan-5' });
+		expect(runWithValue(6)).toEqual({ kind: 'smallerThan', message: ERROR_MESSAGES.smallerThan.de(5) });
 
 		svc.smallerThan(dummyPath, 5);
 		expect(runWithValue('')).toBeUndefined();
@@ -141,7 +106,10 @@ describe('CustomSigValidators', () => {
 		expect(runWithValue(2)).toBeUndefined();
 
 		svc.formattedSmallerThan(dummyPath, 5);
-		expect(runWithValue(6)).toEqual({ kind: 'smallerThan', message: 'formattedSmallerThan-5' });
+		expect(runWithValue(6)).toEqual({
+			kind: 'smallerThan',
+			message: ERROR_MESSAGES.formattedSmallerThan.de(5),
+		});
 
 		svc.formattedSmallerThan(dummyPath, 5);
 		expect(runWithValue('')).toBeUndefined();
@@ -155,7 +123,7 @@ describe('CustomSigValidators', () => {
 		expect(runWithValue(5)).toBeUndefined();
 
 		svc.greaterThan(dummyPath, 5);
-		expect(runWithValue(5)).toEqual({ kind: 'greaterThan', message: 'greaterThan-5' });
+		expect(runWithValue(5)).toEqual({ kind: 'greaterThan', message: ERROR_MESSAGES.greaterThan.de(5) });
 
 		svc.greaterThan(dummyPath, 3);
 		expect(runWithValue('')).toBeUndefined();
@@ -169,7 +137,10 @@ describe('CustomSigValidators', () => {
 		expect(runWithValue(5)).toBeUndefined();
 
 		svc.formattedGreaterThan(dummyPath, 5);
-		expect(runWithValue(5)).toEqual({ kind: 'greaterThan', message: 'formattedGreaterThan-5' });
+		expect(runWithValue(5)).toEqual({
+			kind: 'greaterThan',
+			message: ERROR_MESSAGES.formattedGreaterThan.de(5),
+		});
 
 		svc.formattedGreaterThan(dummyPath, 3);
 		expect(runWithValue('')).toBeUndefined();
@@ -183,7 +154,7 @@ describe('CustomSigValidators', () => {
 		expect(runWithValue(10)).toBeUndefined();
 
 		svc.minValue(dummyPath, 5);
-		expect(runWithValue(3)).toEqual({ kind: 'greaterThan', message: 'minValue-5' });
+		expect(runWithValue(3)).toEqual({ kind: 'greaterThan', message: ERROR_MESSAGES.minValue.de(5) });
 
 		svc.minValue(dummyPath, 5);
 		expect(runWithValue('')).toBeUndefined();
@@ -197,7 +168,10 @@ describe('CustomSigValidators', () => {
 		expect(runWithValue(10)).toBeUndefined();
 
 		svc.formattedMinValue(dummyPath, 5);
-		expect(runWithValue(3)).toEqual({ kind: 'greaterThan', message: 'formattedMinValue-5' });
+		expect(runWithValue(3)).toEqual({
+			kind: 'greaterThan',
+			message: ERROR_MESSAGES.formattedMinValue.de(5),
+		});
 
 		svc.formattedMinValue(dummyPath, 5);
 		expect(runWithValue('')).toBeUndefined();
@@ -211,7 +185,7 @@ describe('CustomSigValidators', () => {
 		expect(runWithValue(3)).toBeUndefined();
 
 		svc.maxValue(dummyPath, 5);
-		expect(runWithValue(10)).toEqual({ kind: 'smallerThan', message: 'maxValue-5' });
+		expect(runWithValue(10)).toEqual({ kind: 'smallerThan', message: ERROR_MESSAGES.maxValue.de(5) });
 
 		svc.maxValue(dummyPath, 5);
 		expect(runWithValue('')).toBeUndefined();
@@ -225,7 +199,10 @@ describe('CustomSigValidators', () => {
 		expect(runWithValue(3)).toBeUndefined();
 
 		svc.formattedMaxValue(dummyPath, 5);
-		expect(runWithValue(10)).toEqual({ kind: 'smallerThan', message: 'formattedMaxValue-5' });
+		expect(runWithValue(10)).toEqual({
+			kind: 'smallerThan',
+			message: ERROR_MESSAGES.formattedMaxValue.de(5),
+		});
 
 		svc.formattedMaxValue(dummyPath, 5);
 		expect(runWithValue('')).toBeUndefined();
@@ -239,7 +216,7 @@ describe('CustomSigValidators', () => {
 		expect(runWithValue('abc')).toBeUndefined();
 
 		svc.lettersOnly(dummyPath as any);
-		expect(runWithValue('123')).toEqual({ kind: 'lettersOnly', message: 'lettersOnly-msg' });
+		expect(runWithValue('123')).toEqual({ kind: 'lettersOnly', message: ERROR_MESSAGES.lettersOnly.de() });
 	});
 
 	it('should validate email correctly', () => {
@@ -247,7 +224,10 @@ describe('CustomSigValidators', () => {
 		expect(runWithValue('test@example.com')).toBeUndefined();
 
 		svc.email(dummyPath as any);
-		expect(runWithValue('invalid-email')).toEqual({ kind: 'invalidEmail', message: 'invalidEmail-msg' });
+		expect(runWithValue('invalid-email')).toEqual({
+			kind: 'invalidEmail',
+			message: ERROR_MESSAGES.invalidEmail.de(),
+		});
 
 		svc.email(dummyPath as any);
 		expect(runWithValue(undefined)).toBeUndefined();
@@ -288,20 +268,23 @@ describe('CustomSigValidators', () => {
 	----------------------------- */
 
 	it('should validate requiredI18n correctly (message="i18n" + i18n object)', () => {
-		const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+		const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-		svc.requiredI18n(dummyPath);
-		expect(runWithValue('abc')).toBeUndefined();
+		try {
+			svc.requiredI18n(dummyPath);
+			expect(runWithValue('abc')).toBeUndefined();
 
-		svc.requiredI18n(dummyPath);
-		const res = runWithValue('');
-		expect(res).toEqual({
-			kind: 'required',
-			message: 'i18n',
-			i18n: { de: 'required-de', fr: 'required-fr', en: 'required-en' },
-		});
-
-		warnSpy.mockRestore();
+			svc.requiredI18n(dummyPath);
+			const res = runWithValue('');
+			expect(res).toEqual({
+				kind: 'required',
+				message: 'i18n',
+				i18n: tri('required'),
+			});
+		}
+		finally {
+			warnSpy.mockRestore();
+		}
 	});
 
 	it('should validate trueRequiredI18n correctly', () => {
@@ -312,7 +295,7 @@ describe('CustomSigValidators', () => {
 		expect(runWithValue(false)).toEqual({
 			kind: 'trueRequired',
 			message: 'i18n',
-			i18n: { de: 'trueRequired-de', fr: 'trueRequired-fr', en: 'trueRequired-en' },
+			i18n: tri('trueRequired'),
 		});
 	});
 
@@ -324,7 +307,7 @@ describe('CustomSigValidators', () => {
 		expect(runWithValue('abc')).toEqual({
 			kind: 'minLength',
 			message: 'i18n',
-			i18n: { de: 'minLength-de-5', fr: 'minLength-fr-5', en: 'minLength-en-5' },
+			i18n: tri('minLength', 5),
 		});
 	});
 
@@ -336,7 +319,7 @@ describe('CustomSigValidators', () => {
 		expect(runWithValue('abcdef')).toEqual({
 			kind: 'maxLength',
 			message: 'i18n',
-			i18n: { de: 'maxLength-de-5', fr: 'maxLength-fr-5', en: 'maxLength-en-5' },
+			i18n: tri('maxLength', 5),
 		});
 	});
 
@@ -351,7 +334,7 @@ describe('CustomSigValidators', () => {
 		expect(runWithValue(6)).toEqual({
 			kind: 'smallerThan',
 			message: 'i18n',
-			i18n: { de: 'smallerThan-de-5', fr: 'smallerThan-fr-5', en: 'smallerThan-en-5' },
+			i18n: tri('smallerThan', 5),
 		});
 	});
 
@@ -363,7 +346,7 @@ describe('CustomSigValidators', () => {
 		expect(runWithValue(3)).toEqual({
 			kind: 'greaterThan',
 			message: 'i18n',
-			i18n: { de: 'minValue-de-5', fr: 'minValue-fr-5', en: 'minValue-en-5' },
+			i18n: tri('minValue', 5),
 		});
 	});
 
@@ -375,7 +358,7 @@ describe('CustomSigValidators', () => {
 		expect(runWithValue(10)).toEqual({
 			kind: 'smallerThan',
 			message: 'i18n',
-			i18n: { de: 'maxValue-de-5', fr: 'maxValue-fr-5', en: 'maxValue-en-5' },
+			i18n: tri('maxValue', 5),
 		});
 	});
 
@@ -387,7 +370,7 @@ describe('CustomSigValidators', () => {
 		expect(runWithValue('invalid-email')).toEqual({
 			kind: 'invalidEmail',
 			message: 'i18n',
-			i18n: { de: 'invalidEmail-de', fr: 'invalidEmail-fr', en: 'invalidEmail-en' },
+			i18n: tri('invalidEmail'),
 		});
 	});
 
@@ -411,19 +394,19 @@ describe('CustomSigValidators', () => {
 
 	it('should validate regexPatternI18n correctly', () => {
 		const pattern = /^[a-zA-Z]+$/;
-		const tri = { de: 'DE', fr: 'FR', en: 'EN' };
+		const triMsg = { de: 'DE', fr: 'FR', en: 'EN' };
 
-		svc.regexPatternI18n(dummyPath as any, pattern, tri as any);
+		svc.regexPatternI18n(dummyPath as any, pattern, triMsg as any);
 		expect(runWithValue('abc')).toBeUndefined();
 
-		svc.regexPatternI18n(dummyPath as any, pattern, tri as any);
+		svc.regexPatternI18n(dummyPath as any, pattern, triMsg as any);
 		expect(runWithValue('123')).toEqual({
 			kind: 'regexPattern',
 			message: 'i18n',
-			i18n: tri,
+			i18n: triMsg,
 		});
 
-		svc.regexPatternI18n(dummyPath as any, pattern, tri as any);
+		svc.regexPatternI18n(dummyPath as any, pattern, triMsg as any);
 		expect(runWithValue(undefined)).toBeUndefined();
 	});
 });

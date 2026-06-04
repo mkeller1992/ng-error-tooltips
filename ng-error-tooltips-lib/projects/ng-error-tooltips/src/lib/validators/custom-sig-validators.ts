@@ -1,7 +1,7 @@
 import { SchemaPath } from '@angular/forms/signals';
 import { ERROR_MESSAGES, tri } from './error-messages.const';
 import { TriLangText } from './tri-lang-text.type';
-import { inject, Injectable, Signal } from '@angular/core';
+import { inject, Service, Signal } from '@angular/core';
 import { ERROR_TOOLTIP_SIG_VALIDATE } from '../error-tooltip-sig-validate.token';
 
 type TriLangTextLike =
@@ -11,7 +11,7 @@ type TriLangTextLike =
 
 type ValueLike<T> = T | Signal<T> | (() => T);
 
-@Injectable({ providedIn: 'root' })
+@Service()
 export class CustomSigValidators {
 	private readonly validate = inject(ERROR_TOOLTIP_SIG_VALIDATE);
 

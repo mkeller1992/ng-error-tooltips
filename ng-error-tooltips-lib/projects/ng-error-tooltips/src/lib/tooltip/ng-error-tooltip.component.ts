@@ -11,7 +11,7 @@ import { Placement } from './placement.type';
 	selector: 'lib-ng-error-tooltip',
 	templateUrl: './ng-error-tooltip.component.html',
 	styleUrls: ['./ng-error-tooltip.component.scss'],
-	changeDetection: ChangeDetectionStrategy.Eager,
+	changeDetection: ChangeDetectionStrategy.OnPush,
 	host: {
 		'[class]': '_classList()',
 

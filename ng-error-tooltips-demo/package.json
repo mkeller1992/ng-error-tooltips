@@ -14,28 +14,28 @@
   },
   "private": true,
   "dependencies": {
-    "@angular/common": "21.2.6",
-    "@angular/compiler": "21.2.6",
-    "@angular/core": "21.2.6",
-    "@angular/forms": "21.2.6",
-    "@angular/platform-browser": "21.2.6",
-    "@angular/platform-browser-dynamic": "21.2.6",
-    "@angular/router": "21.2.6",
+    "@angular/common": "22.0.0",
+    "@angular/compiler": "22.0.0",
+    "@angular/core": "22.0.0",
+    "@angular/forms": "22.0.0",
+    "@angular/platform-browser": "22.0.0",
+    "@angular/platform-browser-dynamic": "22.0.0",
+    "@angular/router": "22.0.0",
     "bootstrap": "5.3.8",
     "ng-error-tooltips": "file:../ng-error-tooltips-lib/dist/ng-error-tooltips",
     "rxjs": "7.8.2",
     "tslib": "2.8.1"
   },
   "devDependencies": {
-    "@angular/build": "21.2.5",
-    "@angular/cli": "21.2.5",
-    "@angular/compiler-cli": "21.2.6",
+    "@angular/build": "^22.0.0",
+    "@angular/cli": "22.0.0",
+    "@angular/compiler-cli": "22.0.0",
     "@nrwl/jest": "19.8.4",
     "@types/jest": "30.0.0",
-    "jest": "30.3.0",
-    "jest-environment-jsdom": "30.3.0",
-    "jest-preset-angular": "16.1.1",
+    "jest": "30.4.2",
+    "jest-environment-jsdom": "30.4.1",
+    "jest-preset-angular": "16.1.5",
     "jest-ts-webcompat-resolver": "1.0.1",
-    "typescript": "5.9.3"
+    "typescript": "6.0.3"
   }
 }

@@ -1,4 +1,4 @@
-import { Component, computed, effect, ElementRef, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Subject } from 'rxjs';
 
 import { ERROR_TOOLTIP_LANG } from '../error-tooltip-lang.token';
@@ -11,6 +11,7 @@ import { Placement } from './placement.type';
 	selector: 'lib-ng-error-tooltip',
 	templateUrl: './ng-error-tooltip.component.html',
 	styleUrls: ['./ng-error-tooltip.component.scss'],
+	changeDetection: ChangeDetectionStrategy.Eager,
 	host: {
 		'[class]': '_classList()',
 

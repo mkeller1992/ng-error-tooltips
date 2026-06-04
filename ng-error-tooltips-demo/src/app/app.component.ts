@@ -1,4 +1,4 @@
-import { Component, OnInit, WritableSignal, inject, signal, viewChild, viewChildren } from '@angular/core';
+import { Component, OnInit, WritableSignal, inject, signal, viewChild, viewChildren, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CustomSigValidators, CustomValidators, ErrorTooltipDirective, ErrorTooltipSigDirective, ErrorTooltipOptions, type SupportedLanguage, type TriLangText, ErrorTooltipSigFormDirective } from '@ng-error-tooltips';
 import { demoLang } from './app.config';
@@ -15,6 +15,7 @@ interface Employee {
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [FormsModule, ReactiveFormsModule, FormField, ErrorTooltipDirective, ErrorTooltipSigDirective,
 	ErrorTooltipSigFormDirective
   ],

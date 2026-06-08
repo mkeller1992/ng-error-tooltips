@@ -1,6 +1,6 @@
 {
   "name": "ng-error-tooltips",
-  "version": "22.0.0",
+  "version": "22.0.1",
   "description": "Error-tooltips for Angular",
   "homepage": "https://mkeller1992.github.io/ng-error-tooltips",
   "repository": {
@@ -24,9 +24,9 @@
     "url": "https://github.com/mkeller1992/ng-error-tooltips/issues"
   },
   "peerDependencies": {
-    "@angular/common": "^21.1.0",
-    "@angular/core": "^21.1.0",
-	"@angular/forms": "^21.1.0",
+    "@angular/common": "^22.0.0",
+    "@angular/core": "^22.0.0",
+	"@angular/forms": "^22.0.0",
     "rxjs": "~7.8.0"
   },
   "dependencies": {

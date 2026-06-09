@@ -50,7 +50,7 @@ import { validate } from '@angular/forms/signals';
 
 import { routes } from './app.routes';
 
-// Demo-language signal (in real apps: inject(LanguageService).currentLanguageCode)
+// Optional: use a signal when the language can change at runtime.
 export const demoLang = signal<SupportedLanguage>('de');
 
 export const appConfig: ApplicationConfig = {
@@ -59,6 +59,7 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
 
     // lang is optional (defaults to 'de')
+	// Pass either a static language string ('de', 'en' or 'fr') or a Signal<SupportedLanguage>.
     // validate is only required for Signal Forms / CustomSigValidators
     provideErrorTooltips({ lang: demoLang, validate }),
   ],

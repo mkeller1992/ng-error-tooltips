@@ -9,7 +9,7 @@ An Angular library for **Reactive Forms** and **Signal Forms** that displays too
 The latest library version is compatible with **Angular 22**.  
 Starting with version **20.1.0**, `ng-error-tooltips` is fully **zoneless-compatible**.
 
-## ⚠️ Breaking Change (Signal Forms)
+## Migration note (Signal Forms)
 
 Starting with version **21.3.x**, the `ErrorTooltipSigDirective` no longer reads the form field via `[formField]`.
 

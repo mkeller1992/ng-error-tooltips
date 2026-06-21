@@ -249,4 +249,135 @@ describe('CustomValidators', () => {
         const result3 = CustomValidators.regexPattern(pattern, errorMessage)(control3);
         expect(result3).toBeNull();
     });
+
+	describe('i18n validators', () => {
+		const customMessage = {
+			de: 'Benutzerdefinierte Meldung',
+			fr: 'Message personnalise',
+			en: 'Custom message'
+		};
+
+		it('should validate requiredI18n correctly', () => {
+			expect(CustomValidators.requiredI18n()(new FormControl('abc'))).toBeNull();
+			expect(CustomValidators.requiredI18n()(new FormControl([]))).toEqual({ required: expect.objectContaining({ de: expect.any(String), fr: expect.any(String), en: expect.any(String) }) });
+			expect(CustomValidators.requiredI18n()(new FormControl('   '))).toEqual({ required: expect.anything() });
+			expect(CustomValidators.requiredI18n(customMessage)(new FormControl(null))).toEqual({ required: customMessage });
+		});
+
+		it('should validate trueRequiredI18n correctly', () => {
+			expect(CustomValidators.trueRequiredI18n()(new FormControl(true))).toBeNull();
+			expect(CustomValidators.trueRequiredI18n()(new FormControl(false))).toEqual({ trueRequired: expect.anything() });
+			expect(CustomValidators.trueRequiredI18n(customMessage)(new FormControl(null))).toEqual({ trueRequired: customMessage });
+		});
+
+		it('should validate minLengthI18n correctly', () => {
+			expect(CustomValidators.minLengthI18n(5)(new FormControl('abcde'))).toBeNull();
+			expect(CustomValidators.minLengthI18n(5)(new FormControl(''))).toBeNull();
+			expect(CustomValidators.minLengthI18n(5)(new FormControl('abc'))).toEqual({ minLength: expect.anything() });
+			expect(CustomValidators.minLengthI18n(5, customMessage)(new FormControl('abc'))).toEqual({ minLength: customMessage });
+		});
+
+		it('should validate maxLengthI18n correctly', () => {
+			expect(CustomValidators.maxLengthI18n(5)(new FormControl('abc'))).toBeNull();
+			expect(CustomValidators.maxLengthI18n(5)(new FormControl(''))).toBeNull();
+			expect(CustomValidators.maxLengthI18n(5)(new FormControl('abcdef'))).toEqual({ maxLength: expect.anything() });
+			expect(CustomValidators.maxLengthI18n(5, customMessage)(new FormControl('abcdef'))).toEqual({ maxLength: customMessage });
+		});
+
+		it('should validate smallerThanI18n correctly', () => {
+			expect(CustomValidators.smallerThanI18n(5)(new FormControl(2))).toBeNull();
+			expect(CustomValidators.smallerThanI18n(5)(new FormControl(''))).toBeNull();
+			expect(CustomValidators.smallerThanI18n(5)(new FormControl('abc'))).toBeNull();
+			expect(CustomValidators.smallerThanI18n(5)(new FormControl(5))).toEqual({ smallerThan: expect.anything() });
+			expect(CustomValidators.smallerThanI18n(5, customMessage)(new FormControl(6))).toEqual({ smallerThan: customMessage });
+		});
+
+		it('should validate formattedSmallerThanI18n correctly', () => {
+			expect(CustomValidators.formattedSmallerThanI18n(5)(new FormControl(2))).toBeNull();
+			expect(CustomValidators.formattedSmallerThanI18n(5)(new FormControl(undefined))).toBeNull();
+			expect(CustomValidators.formattedSmallerThanI18n(5)(new FormControl('abc'))).toBeNull();
+			expect(CustomValidators.formattedSmallerThanI18n(5)(new FormControl(5))).toEqual({ smallerThan: expect.anything() });
+			expect(CustomValidators.formattedSmallerThanI18n(5, customMessage)(new FormControl(6))).toEqual({ smallerThan: customMessage });
+		});
+
+		it('should validate greaterThanI18n correctly', () => {
+			expect(CustomValidators.greaterThanI18n(5)(new FormControl(6))).toBeNull();
+			expect(CustomValidators.greaterThanI18n(5)(new FormControl(''))).toBeNull();
+			expect(CustomValidators.greaterThanI18n(5)(new FormControl('abc'))).toBeNull();
+			expect(CustomValidators.greaterThanI18n(5)(new FormControl(5))).toEqual({ greaterThan: expect.anything() });
+			expect(CustomValidators.greaterThanI18n(5, customMessage)(new FormControl(4))).toEqual({ greaterThan: customMessage });
+		});
+
+		it('should validate formattedGreaterThanI18n correctly', () => {
+			expect(CustomValidators.formattedGreaterThanI18n(5)(new FormControl(6))).toBeNull();
+			expect(CustomValidators.formattedGreaterThanI18n(5)(new FormControl(undefined))).toBeNull();
+			expect(CustomValidators.formattedGreaterThanI18n(5)(new FormControl('abc'))).toBeNull();
+			expect(CustomValidators.formattedGreaterThanI18n(5)(new FormControl(5))).toEqual({ greaterThan: expect.anything() });
+			expect(CustomValidators.formattedGreaterThanI18n(5, customMessage)(new FormControl(4))).toEqual({ greaterThan: customMessage });
+		});
+
+		it('should validate minValueI18n correctly', () => {
+			expect(CustomValidators.minValueI18n(5)(new FormControl(5))).toBeNull();
+			expect(CustomValidators.minValueI18n(5)(new FormControl(''))).toBeNull();
+			expect(CustomValidators.minValueI18n(5)(new FormControl('abc'))).toBeNull();
+			expect(CustomValidators.minValueI18n(5)(new FormControl(4))).toEqual({ greaterThan: expect.anything() });
+			expect(CustomValidators.minValueI18n(5, customMessage)(new FormControl(4))).toEqual({ greaterThan: customMessage });
+		});
+
+		it('should validate formattedMinValueI18n correctly', () => {
+			expect(CustomValidators.formattedMinValueI18n(5)(new FormControl(5))).toBeNull();
+			expect(CustomValidators.formattedMinValueI18n(5)(new FormControl(undefined))).toBeNull();
+			expect(CustomValidators.formattedMinValueI18n(5)(new FormControl('abc'))).toBeNull();
+			expect(CustomValidators.formattedMinValueI18n(5)(new FormControl(4))).toEqual({ greaterThan: expect.anything() });
+			expect(CustomValidators.formattedMinValueI18n(5, customMessage)(new FormControl(4))).toEqual({ greaterThan: customMessage });
+		});
+
+		it('should validate maxValueI18n correctly', () => {
+			expect(CustomValidators.maxValueI18n(5)(new FormControl(5))).toBeNull();
+			expect(CustomValidators.maxValueI18n(5)(new FormControl(''))).toBeNull();
+			expect(CustomValidators.maxValueI18n(5)(new FormControl('abc'))).toBeNull();
+			expect(CustomValidators.maxValueI18n(5)(new FormControl(6))).toEqual({ smallerThan: expect.anything() });
+			expect(CustomValidators.maxValueI18n(5, customMessage)(new FormControl(6))).toEqual({ smallerThan: customMessage });
+		});
+
+		it('should validate formattedMaxValueI18n correctly', () => {
+			expect(CustomValidators.formattedMaxValueI18n(5)(new FormControl(5))).toBeNull();
+			expect(CustomValidators.formattedMaxValueI18n(5)(new FormControl(undefined))).toBeNull();
+			expect(CustomValidators.formattedMaxValueI18n(5)(new FormControl('abc'))).toBeNull();
+			expect(CustomValidators.formattedMaxValueI18n(5)(new FormControl(6))).toEqual({ smallerThan: expect.anything() });
+			expect(CustomValidators.formattedMaxValueI18n(5, customMessage)(new FormControl(6))).toEqual({ smallerThan: customMessage });
+		});
+
+		it('should validate lettersOnlyI18n correctly', () => {
+			expect(CustomValidators.lettersOnlyI18n()(new FormControl('abc ABC'))).toBeNull();
+			expect(CustomValidators.lettersOnlyI18n()(new FormControl('abc123'))).toEqual({ lettersOnly: expect.anything() });
+			expect(CustomValidators.lettersOnlyI18n(customMessage)(new FormControl('123'))).toEqual({ lettersOnly: customMessage });
+		});
+
+		it('should validate emailI18n correctly', () => {
+			expect(CustomValidators.emailI18n()(new FormControl('test@example.com'))).toBeNull();
+			expect(CustomValidators.emailI18n()(new FormControl(''))).toBeNull();
+			expect(CustomValidators.emailI18n()(new FormControl(undefined))).toBeNull();
+			expect(CustomValidators.emailI18n()(new FormControl('invalid-email'))).toEqual({ invalidEmail: expect.anything() });
+			expect(CustomValidators.emailI18n(customMessage)(new FormControl('invalid-email'))).toEqual({ invalidEmail: customMessage });
+		});
+
+		it('should validate passwordErrorsI18n correctly', () => {
+			expect(CustomValidators.passwordErrorsI18n(6, 1, 1)(new FormControl('Abc123'))).toBeNull();
+
+			const result = CustomValidators.passwordErrorsI18n(6, 2, 1)(new FormControl('abc'));
+			expect(result).toEqual({ passwordErrors: expect.any(Array) });
+			expect(result?.['passwordErrors']).toHaveLength(3);
+			expect(result?.['passwordErrors'][0].text).toEqual(expect.objectContaining({ de: expect.any(String), fr: expect.any(String), en: expect.any(String) }));
+		});
+
+		it('should validate regexPatternI18n correctly', () => {
+			const pattern = /^[a-zA-Z]+$/;
+
+			expect(CustomValidators.regexPatternI18n(pattern, customMessage)(new FormControl('abc'))).toBeNull();
+			expect(CustomValidators.regexPatternI18n(pattern, customMessage)(new FormControl(''))).toBeNull();
+			expect(CustomValidators.regexPatternI18n(pattern, customMessage)(new FormControl(undefined))).toBeNull();
+			expect(CustomValidators.regexPatternI18n(pattern, customMessage)(new FormControl('123'))).toEqual({ regexPattern: customMessage });
+		});
+	});
 });

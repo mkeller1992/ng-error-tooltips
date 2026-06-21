@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { SchemaPath } from '@angular/forms/signals';
+import { signal } from '@angular/core';
 
 import { CustomSigValidators } from './custom-sig-validators';
 import { ERROR_MESSAGES, tri } from './error-messages.const';
@@ -408,5 +409,227 @@ describe('CustomSigValidators', () => {
 
 		svc.regexPatternI18n(dummyPath as any, pattern, triMsg as any);
 		expect(runWithValue(undefined)).toBeUndefined();
+	});
+
+	describe('additional coverage for dynamic values and remaining i18n validators', () => {
+		const customTri = { de: 'DE custom', fr: 'FR custom', en: 'EN custom' };
+
+		it('should pass the provided path and resolve dynamic string and number values', () => {
+			const path = { custom: 'path' } as unknown as SchemaPath<any>;
+			const minLength = vi.fn(() => 5);
+			const errorMessage = vi.fn(() => 'Dynamic min length message');
+
+			svc.minLength(path as any, minLength, errorMessage);
+
+			expect(validateMock).toHaveBeenLastCalledWith(path, expect.any(Function));
+			expect(runWithValue('abc')).toEqual({
+				kind: 'minLength',
+				message: 'Dynamic min length message',
+			});
+			expect(minLength).toHaveBeenCalled();
+			expect(errorMessage).toHaveBeenCalled();
+		});
+
+		it('should resolve signal-like values for non-i18n validators', () => {
+			const max = signal(3);
+			const msg = signal('Too long from signal');
+
+			svc.maxLength(dummyPath as any, max, msg);
+
+			expect(runWithValue('abcd')).toEqual({
+				kind: 'maxLength',
+				message: 'Too long from signal',
+			});
+		});
+
+		it('should skip optional lettersOnly values and use a custom message for invalid input', () => {
+			svc.lettersOnly(dummyPath as any, 'Only letters please');
+			expect(runWithValue(null)).toBeUndefined();
+
+			svc.lettersOnly(dummyPath as any, 'Only letters please');
+			expect(runWithValue(undefined)).toBeUndefined();
+
+			svc.lettersOnly(dummyPath as any, 'Only letters please');
+			expect(runWithValue('')).toBeUndefined();
+
+			svc.lettersOnly(dummyPath as any, 'Only letters please');
+			expect(runWithValue('Äpfel und Öl')).toBeUndefined();
+
+			svc.lettersOnly(dummyPath as any, 'Only letters please');
+			expect(runWithValue('abc123')).toEqual({
+				kind: 'lettersOnly',
+				message: 'Only letters please',
+			});
+		});
+
+		it('should use dynamic thresholds for passwordErrors', () => {
+			svc.passwordErrors(dummyPath as any, () => 6, () => 2, () => 2);
+
+			const result = runWithValue('Abc1');
+
+			expect(result).toEqual([
+				{ kind: 'passwordErrors', message: ERROR_MESSAGES.minLength.de(6) },
+				{ kind: 'passwordErrors', message: ERROR_MESSAGES.minNumberOfDigits.de(2) },
+				{ kind: 'passwordErrors', message: ERROR_MESSAGES.minNumberOfCapitalLetters.de(2) },
+			]);
+		});
+
+		it('should treat whitespace, NaN and empty arrays as empty in requiredI18n', () => {
+			svc.requiredI18n(dummyPath);
+			expect(runWithValue('   ')).toEqual({
+				kind: 'required',
+				message: 'i18n',
+				i18n: tri('required'),
+			});
+
+			svc.requiredI18n(dummyPath);
+			expect(runWithValue(Number.NaN)).toEqual({
+				kind: 'required',
+				message: 'i18n',
+				i18n: tri('required'),
+			});
+
+			svc.requiredI18n(dummyPath);
+			expect(runWithValue([])).toEqual({
+				kind: 'required',
+				message: 'i18n',
+				i18n: tri('required'),
+			});
+
+			svc.requiredI18n(dummyPath);
+			expect(runWithValue(0)).toBeUndefined();
+		});
+
+		it('should resolve custom i18n messages from plain objects, functions and signals', () => {
+			svc.trueRequiredI18n(dummyPath as any, customTri);
+			expect(runWithValue(false)).toEqual({
+				kind: 'trueRequired',
+				message: 'i18n',
+				i18n: customTri,
+			});
+
+			svc.requiredI18n(dummyPath, () => customTri);
+			expect(runWithValue('')).toEqual({
+				kind: 'required',
+				message: 'i18n',
+				i18n: customTri,
+			});
+
+			svc.minLengthI18n(dummyPath as any, 5, signal(customTri));
+			expect(runWithValue('abc')).toEqual({
+				kind: 'minLength',
+				message: 'i18n',
+				i18n: customTri,
+			});
+		});
+
+		it('should validate formattedSmallerThanI18n correctly', () => {
+			svc.formattedSmallerThanI18n(dummyPath, 5);
+			expect(runWithValue(2)).toBeUndefined();
+
+			svc.formattedSmallerThanI18n(dummyPath, 5);
+			expect(runWithValue('abc')).toBeUndefined();
+
+			svc.formattedSmallerThanI18n(dummyPath, 5);
+			expect(runWithValue(5)).toEqual({
+				kind: 'smallerThan',
+				message: 'i18n',
+				i18n: tri('formattedSmallerThan', 5),
+			});
+		});
+
+		it('should validate greaterThanI18n correctly', () => {
+			svc.greaterThanI18n(dummyPath, 5);
+			expect(runWithValue(6)).toBeUndefined();
+
+			svc.greaterThanI18n(dummyPath, 5);
+			expect(runWithValue('')).toBeUndefined();
+
+			svc.greaterThanI18n(dummyPath, 5);
+			expect(runWithValue(5)).toEqual({
+				kind: 'greaterThan',
+				message: 'i18n',
+				i18n: tri('greaterThan', 5),
+			});
+		});
+
+		it('should validate formattedGreaterThanI18n correctly', () => {
+			svc.formattedGreaterThanI18n(dummyPath, 5);
+			expect(runWithValue(6)).toBeUndefined();
+
+			svc.formattedGreaterThanI18n(dummyPath, 5);
+			expect(runWithValue('abc')).toBeUndefined();
+
+			svc.formattedGreaterThanI18n(dummyPath, 5);
+			expect(runWithValue(4)).toEqual({
+				kind: 'greaterThan',
+				message: 'i18n',
+				i18n: tri('formattedGreaterThan', 5),
+			});
+		});
+
+		it('should validate formattedMinValueI18n correctly', () => {
+			svc.formattedMinValueI18n(dummyPath, 5);
+			expect(runWithValue(5)).toBeUndefined();
+
+			svc.formattedMinValueI18n(dummyPath, 5);
+			expect(runWithValue('abc')).toBeUndefined();
+
+			svc.formattedMinValueI18n(dummyPath, 5);
+			expect(runWithValue(4)).toEqual({
+				kind: 'greaterThan',
+				message: 'i18n',
+				i18n: tri('formattedMinValue', 5),
+			});
+		});
+
+		it('should validate formattedMaxValueI18n correctly', () => {
+			svc.formattedMaxValueI18n(dummyPath, 5);
+			expect(runWithValue(5)).toBeUndefined();
+
+			svc.formattedMaxValueI18n(dummyPath, 5);
+			expect(runWithValue('abc')).toBeUndefined();
+
+			svc.formattedMaxValueI18n(dummyPath, 5);
+			expect(runWithValue(6)).toEqual({
+				kind: 'smallerThan',
+				message: 'i18n',
+				i18n: tri('formattedMaxValue', 5),
+			});
+		});
+
+		it('should validate lettersOnlyI18n correctly', () => {
+			svc.lettersOnlyI18n(dummyPath as any);
+			expect(runWithValue(null)).toBeUndefined();
+
+			svc.lettersOnlyI18n(dummyPath as any);
+			expect(runWithValue('Äpfel und Öl')).toBeUndefined();
+
+			svc.lettersOnlyI18n(dummyPath as any);
+			expect(runWithValue('abc123')).toEqual({
+				kind: 'lettersOnly',
+				message: 'i18n',
+				i18n: tri('lettersOnly'),
+			});
+
+			svc.lettersOnlyI18n(dummyPath as any, () => customTri);
+			expect(runWithValue('123')).toEqual({
+				kind: 'lettersOnly',
+				message: 'i18n',
+				i18n: customTri,
+			});
+		});
+
+		it('should use signal thresholds for i18n passwordErrors', () => {
+			svc.passwordErrorsI18n(dummyPath as any, signal(6), signal(2), signal(2));
+
+			const result = runWithValue('Abc1');
+
+			expect(result).toEqual([
+				{ kind: 'passwordErrors', message: 'i18n', i18n: tri('minLength', 6) },
+				{ kind: 'passwordErrors', message: 'i18n', i18n: tri('minNumberOfDigits', 2) },
+				{ kind: 'passwordErrors', message: 'i18n', i18n: tri('minNumberOfCapitalLetters', 2) },
+			]);
+		});
 	});
 });

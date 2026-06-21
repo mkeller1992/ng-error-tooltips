@@ -3,6 +3,10 @@ $BackgroundColor: rgb(255, 255, 199);
 $BorderColor: black;
 
 :host {
+  --ng-error-tooltip-text-color: #{$TextColor};
+  --ng-error-tooltip-background-color: #{$BackgroundColor};
+  --ng-error-tooltip-border-color: #{$BorderColor};
+
   max-width: 200px;
   background-color: black;
   color: #fff;
@@ -85,9 +89,9 @@ $BorderColor: black;
   }
 
   &.tooltip-error {
-    border: 1px solid rgba(0, 0, 0, .06);
-    background-color: $BackgroundColor;
-    color: $TextColor;
+    border: 1px solid var(--ng-error-tooltip-border-color);
+    background-color: var(--ng-error-tooltip-background-color);
+    color: var(--ng-error-tooltip-text-color);
 
     .tooltip-arrow {
       position: absolute;
@@ -96,7 +100,7 @@ $BorderColor: black;
       transform: rotate(135deg);
 
       &::after {
-		background-color: $BackgroundColor;
+		background-color: var(--ng-error-tooltip-background-color);
         content: '';
         display: block;
         position: absolute;
@@ -107,7 +111,7 @@ $BorderColor: black;
   }
 
   &.tooltip-top.tooltip-error {
-	border: 1px solid $BorderColor;
+	border: 1px solid var(--ng-error-tooltip-border-color);
 
     .tooltip-arrow {
       top: 100%;
@@ -119,14 +123,14 @@ $BorderColor: black;
       &::after {
         top: 1px;
         right: 1px;
-		border-top: 1px solid $BorderColor;
-		border-right: 1px solid $BorderColor;
+		border-top: 1px solid var(--ng-error-tooltip-border-color);
+		border-right: 1px solid var(--ng-error-tooltip-border-color);
       }
     }
   }
 
   &.tooltip-top-left.tooltip-error {
-	border: 1px solid $BorderColor;
+	border: 1px solid var(--ng-error-tooltip-border-color);
 
     .tooltip-arrow {
 	  top: 100%;
@@ -138,14 +142,14 @@ $BorderColor: black;
       &::after {
         top: 1px;
         right: 1px;
-		border-top: 1px solid $BorderColor;
-		border-right: 1px solid $BorderColor;
+		border-top: 1px solid var(--ng-error-tooltip-border-color);
+		border-right: 1px solid var(--ng-error-tooltip-border-color);
       }
     }
   }
 
   &.tooltip-bottom.tooltip-error {
-	border: 1px solid $BorderColor;
+	border: 1px solid var(--ng-error-tooltip-border-color);
 
     .tooltip-arrow {
       bottom: 100%;
@@ -157,14 +161,14 @@ $BorderColor: black;
       &::after {
         top: -1px;
         right: -1px;
-		border-bottom: 1px solid $BorderColor;
-		border-left: 1px solid $BorderColor;
+		border-bottom: 1px solid var(--ng-error-tooltip-border-color);
+		border-left: 1px solid var(--ng-error-tooltip-border-color);
       }
     }
   }
 
   &.tooltip-bottom-left.tooltip-error {
-	border: 1px solid $BorderColor;
+	border: 1px solid var(--ng-error-tooltip-border-color);
 
     .tooltip-arrow {
       bottom: 100%;
@@ -176,14 +180,14 @@ $BorderColor: black;
       &::after {
         top: -1px;
         right: -1px;
-		border-bottom: 1px solid $BorderColor;
-		border-left: 1px solid $BorderColor;
+		border-bottom: 1px solid var(--ng-error-tooltip-border-color);
+		border-left: 1px solid var(--ng-error-tooltip-border-color);
       }
     }
   }
 
   &.tooltip-left.tooltip-error {
-    border: 1px solid $BorderColor;
+    border: 1px solid var(--ng-error-tooltip-border-color);
 
     .tooltip-arrow {
       top: 50%;
@@ -195,14 +199,14 @@ $BorderColor: black;
       &::after {
         top: 1px;
         right: -1px;
-		border-top: 1px solid $BorderColor;
-		border-left: 1px solid $BorderColor;
+		border-top: 1px solid var(--ng-error-tooltip-border-color);
+		border-left: 1px solid var(--ng-error-tooltip-border-color);
       }
     }
   }
 
   &.tooltip-right.tooltip-error {
-    border: 1px solid $BorderColor;
+    border: 1px solid var(--ng-error-tooltip-border-color);
 
     .tooltip-arrow {
       top: 50%;
@@ -214,8 +218,8 @@ $BorderColor: black;
       &::after {
         top: -1px;
         right: 1px;
-		border-bottom: 1px solid $BorderColor;
-		border-right: 1px solid $BorderColor;
+		border-bottom: 1px solid var(--ng-error-tooltip-border-color);
+		border-right: 1px solid var(--ng-error-tooltip-border-color);
       }
     }
   }

@@ -11,6 +11,9 @@ export interface ErrorTooltipOptions {
     offset?: number;
     width?: string;
     maxWidth?: string;
+    textColor?: string;
+    backgroundColor?: string;
+    borderColor?: string;
     pointerEvents?: "auto" | "none"; // 'none' would mean that there is no reaction to clicks
 
     appendTooltipToBody?: boolean;

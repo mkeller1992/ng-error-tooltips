@@ -45,7 +45,7 @@ npm i ng-error-tooltips
 ```ts
 import { ApplicationConfig, provideZonelessChangeDetection, signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideErrorTooltips, type SupportedLanguage } from 'ng-error-tooltips';
+import { provideErrorTooltipOptions, provideErrorTooltips, type SupportedLanguage } from 'ng-error-tooltips';
 import { validate } from '@angular/forms/signals';
 
 import { routes } from './app.routes';
@@ -62,8 +62,22 @@ export const appConfig: ApplicationConfig = {
 	// Pass either a static language string ('de', 'en' or 'fr') or a Signal<SupportedLanguage>.
     // validate is only required for Signal Forms / CustomSigValidators
     provideErrorTooltips({ lang: demoLang, validate }),
+
+    // Optional global defaults for all tooltips.
+    // Local [options] and explicit inputs like [placement] or [textColor] can still override these values.
+    provideErrorTooltipOptions({
+      textColor: '#7f1d1d',
+      backgroundColor: '#fff7ed',
+      borderColor: '#f97316',
+    }),
   ],
 };
+```
+
+Tooltip options are merged in this order:
+
+```text
+library defaults < provideErrorTooltipOptions(...) < [options] < explicit inputs
 ```
 
 ### Directives
@@ -74,6 +88,27 @@ import {
   ErrorTooltipSigDirective,
   ErrorTooltipSigFormDirective,
 } from 'ng-error-tooltips';
+```
+
+---
+
+## Library folder structure
+
+The main library source lives in `ng-error-tooltips-lib/projects/ng-error-tooltips/src/lib`:
+
+```text
+lib/
+├─ error-tooltip.directive.ts            # Reactive Forms tooltip directive
+├─ error-tooltip-sig.directive.ts        # Signal Forms tooltip directive
+├─ error-tooltip-sig-form.directive.ts   # Container directive for showing/hiding Signal Forms tooltips
+├─ provide-error-tooltips.ts             # Provider setup for language and Signal Forms validation integration
+├─ error-tooltip-lang.token.ts           # Language configuration token
+├─ error-tooltip-sig-validate.token.ts   # Signal Forms validate integration token
+├─ error-payload.type.ts                 # Shared tooltip error payload type
+├─ mocks/                                # Lightweight directives for consumer unit tests
+├─ options/                              # Tooltip options interface and defaults
+├─ tooltip/                              # Tooltip component, template, styles and placement types
+└─ validators/                           # Reactive Forms and Signal Forms validators plus i18n messages
 ```
 
 ---
@@ -202,6 +237,9 @@ import { ErrorTooltipOptions } from 'ng-error-tooltips';
 
 tooltipOptions: ErrorTooltipOptions = {
   placement: 'right',
+  textColor: '#7f1d1d',
+  backgroundColor: '#fff7ed',
+  borderColor: '#f97316',
 };
 ```
 
@@ -243,6 +281,9 @@ Whenever the language signal changes, all visible error tooltips update automati
 | offset | number | 8 | Offset of the tooltip relative to the element |
 | width | string | '' | Fixed width of the tooltip |
 | maxWidth | string | '350px' | Maximum width of the tooltip |
+| textColor | string | '' | Custom text color of the tooltip |
+| backgroundColor | string | '' | Custom background color of the tooltip |
+| borderColor | string | '' | Custom border color of the tooltip and arrow |
 | pointerEvents | "auto" \| "none" | 'auto' | Whether the tooltip reacts to pointer events |
 | appendTooltipToBody | boolean | true | Whether the tooltip should be appended to the document body. Set to `false` for Angular Material dialogs or other overlay-based components where body-appended tooltips may appear behind the overlay |
 

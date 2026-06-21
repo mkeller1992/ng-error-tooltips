@@ -7,6 +7,7 @@ import { ErrorPayload } from './error-payload.type';
 import { isTriLangText } from './validators/error-messages.const';
 import { defaultOptions } from './options/default-options.const';
 import { ErrorTooltipOptions } from './options/error-tooltip-options.interface';
+import { ERROR_TOOLTIP_OPTIONS } from './options/error-tooltip-options.token';
 import { NgErrorTooltipComponent } from './tooltip/ng-error-tooltip.component';
 
 @Directive({
@@ -19,6 +20,7 @@ export class ErrorTooltipDirective implements OnDestroy {
 	private readonly envInjector = inject(EnvironmentInjector);
 	private readonly controlContainer = inject(ControlContainer, { optional: true });
 	private readonly ngControl = inject(NgControl, { self: true, optional: true });
+	private readonly globalOptions = inject(ERROR_TOOLTIP_OPTIONS);
 
 	// ---- inputs (signals) ----
 	readonly options = input<ErrorTooltipOptions>({});
@@ -31,12 +33,16 @@ export class ErrorTooltipDirective implements OnDestroy {
 	readonly offset = input<number | null>(null);
 	readonly width = input<string | null>(null);
 	readonly maxWidth = input<string | null>(null);
+	readonly textColor = input<string | null>(null);
+	readonly backgroundColor = input<string | null>(null);
+	readonly borderColor = input<string | null>(null);
 	readonly pointerEvents = input<'auto' | 'none' | null>(null);
 	readonly appendTooltipToBody = input<boolean | null>(null);
 
 	private readonly mergedOptions = computed<ErrorTooltipOptions>(() => (
 		{
 		...defaultOptions,
+		...this.globalOptions,
 		...this.options(),
 		...(this.id() != null ? { id: this.id()! } : {}),
 		...(this.showFirstErrorOnly() != null ? { showFirstErrorOnly: this.showFirstErrorOnly()! } : {}),
@@ -47,6 +53,9 @@ export class ErrorTooltipDirective implements OnDestroy {
 		...(this.offset() != null ? { offset: this.offset()! } : {}),
 		...(this.width() != null ? { width: this.width()! } : {}),
 		...(this.maxWidth() != null ? { maxWidth: this.maxWidth()! } : {}),
+		...(this.textColor() != null ? { textColor: this.textColor()! } : {}),
+		...(this.backgroundColor() != null ? { backgroundColor: this.backgroundColor()! } : {}),
+		...(this.borderColor() != null ? { borderColor: this.borderColor()! } : {}),
 		...(this.pointerEvents() != null ? { pointerEvents: this.pointerEvents()! } : {}),
 		...(this.appendTooltipToBody() != null ? { appendTooltipToBody: this.appendTooltipToBody()! } : {}),
 	}));

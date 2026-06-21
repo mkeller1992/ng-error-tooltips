@@ -65,6 +65,21 @@ export class MockErrorTooltipSigDirective {
 	}
 
 	@Input()
+	set textColor(val: string | null) {
+		if (val != null) this.collectedOptions.textColor = val;
+	}
+
+	@Input()
+	set backgroundColor(val: string | null) {
+		if (val != null) this.collectedOptions.backgroundColor = val;
+	}
+
+	@Input()
+	set borderColor(val: string | null) {
+		if (val != null) this.collectedOptions.borderColor = val;
+	}
+
+	@Input()
 	set pointerEvents(val: 'auto' | 'none' | null) {
 		if (val != null) this.collectedOptions.pointerEvents = val;
 	}

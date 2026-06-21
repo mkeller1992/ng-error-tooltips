@@ -4,6 +4,7 @@
 export * from './lib/error-tooltip.directive';
 export * from './lib/error-tooltip-sig.directive';
 export * from './lib/provide-error-tooltips';
+export * from './lib/options/error-tooltip-options.token';
 export * from './lib/options/error-tooltip-options.interface';
 export * from './lib/validators/custom-validators';
 export * from './lib/validators/custom-sig-validators';

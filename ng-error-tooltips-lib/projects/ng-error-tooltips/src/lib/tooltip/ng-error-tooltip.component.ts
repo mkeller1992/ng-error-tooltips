@@ -23,6 +23,9 @@ import { Placement } from './placement.type';
 		'[style.width]': '_width()',
 		'[style.maxWidth]': '_maxWidth()',
 		'[style.pointerEvents]': '_pointerEvents()',
+		'[style.--ng-error-tooltip-text-color]': '_textColor()',
+		'[style.--ng-error-tooltip-background-color]': '_backgroundColor()',
+		'[style.--ng-error-tooltip-border-color]': '_borderColor()',
 	},
 })
 export class NgErrorTooltipComponent {
@@ -59,6 +62,9 @@ export class NgErrorTooltipComponent {
 	protected readonly _width = signal<string>('');
 	protected readonly _maxWidth = signal<string>(defaultOptions.maxWidth ?? '');
 	protected readonly _pointerEvents = signal<string>(defaultOptions.pointerEvents ?? 'auto');
+	protected readonly _textColor = signal<string>('');
+	protected readonly _backgroundColor = signal<string>('');
+	protected readonly _borderColor = signal<string>('');
 	protected readonly _position = signal<'absolute' | 'fixed'>('absolute');
 
 	private readonly _isShown = signal(false);
@@ -235,6 +241,9 @@ export class NgErrorTooltipComponent {
 		this._customClass.set(options.tooltipClass?.trim() ?? '');
 		this._pointerEvents.set(options.pointerEvents ?? defaultOptions.pointerEvents!);
 		this._hasShadow.set(options.shadow ?? defaultOptions.shadow!);
+		this._textColor.set(options.textColor ?? defaultOptions.textColor ?? '');
+		this._backgroundColor.set(options.backgroundColor ?? defaultOptions.backgroundColor ?? '');
+		this._borderColor.set(options.borderColor ?? defaultOptions.borderColor ?? '');
 
 		this._width.set(options.width ?? '');
 		this._maxWidth.set(options.maxWidth ?? defaultOptions.maxWidth!);

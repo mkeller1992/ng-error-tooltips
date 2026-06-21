@@ -40,7 +40,7 @@ export class AppComponent implements OnInit {
 	];
 
 	tooltipOptions: ErrorTooltipOptions = {
-		placement: 'right',
+		placement: 'right'
 	};
 
   	// Regex example: employee id like "EMP-1234"

@@ -5,6 +5,7 @@ import { Placement } from './tooltip/placement.type';
 import { ErrorPayload } from './error-payload.type';
 import { defaultOptions } from './options/default-options.const';
 import { ErrorTooltipOptions } from './options/error-tooltip-options.interface';
+import { ERROR_TOOLTIP_OPTIONS } from './options/error-tooltip-options.token';
 import { NgErrorTooltipComponent } from './tooltip/ng-error-tooltip.component';
 import { FieldTree } from '@angular/forms/signals';
 import { TriLangText } from './validators/tri-lang-text.type';
@@ -19,6 +20,7 @@ export class ErrorTooltipSigDirective implements OnDestroy {
 	private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
 	private readonly viewContainerRef = inject(ViewContainerRef);
 	private readonly injector = inject(EnvironmentInjector);
+	private readonly globalOptions = inject(ERROR_TOOLTIP_OPTIONS);
 
 	// Pass options as a single object:
 	readonly options = input<ErrorTooltipOptions>({});
@@ -33,12 +35,16 @@ export class ErrorTooltipSigDirective implements OnDestroy {
 	readonly offset = input<number | null>(null);
 	readonly width = input<string | null>(null);
 	readonly maxWidth = input<string | null>(null);
+	readonly textColor = input<string | null>(null);
+	readonly backgroundColor = input<string | null>(null);
+	readonly borderColor = input<string | null>(null);
 	readonly pointerEvents = input<'auto' | 'none' | null>(null);
 	readonly appendTooltipToBody = input<boolean | null>(null);
 
 	// A merge of all options that were passed in various ways:
 	private readonly mergedOptions = computed<ErrorTooltipOptions>(() => ({
 		...defaultOptions,
+		...this.globalOptions,
 		...this.options(),
 		...(this.id() != null ? { id: this.id()! } : {}),
 		...(this.showFirstErrorOnly() != null ? { showFirstErrorOnly: this.showFirstErrorOnly()! } : {}),
@@ -49,6 +55,9 @@ export class ErrorTooltipSigDirective implements OnDestroy {
 		...(this.offset() != null ? { offset: this.offset()! } : {}),
 		...(this.width() != null ? { width: this.width()! } : {}),
 		...(this.maxWidth() != null ? { maxWidth: this.maxWidth()! } : {}),
+		...(this.textColor() != null ? { textColor: this.textColor()! } : {}),
+		...(this.backgroundColor() != null ? { backgroundColor: this.backgroundColor()! } : {}),
+		...(this.borderColor() != null ? { borderColor: this.borderColor()! } : {}),
 		...(this.pointerEvents() != null ? { pointerEvents: this.pointerEvents()! } : {}),
 		...(this.appendTooltipToBody() != null ? { appendTooltipToBody: this.appendTooltipToBody()! } : {}),
 	}));

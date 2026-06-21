@@ -1,7 +1,7 @@
 import { ApplicationConfig, provideZonelessChangeDetection, signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import type { SupportedLanguage } from '@ng-error-tooltips';
-import { provideErrorTooltips } from '@ng-error-tooltips';
+import { provideErrorTooltipOptions, provideErrorTooltips } from '@ng-error-tooltips';
 
 import { routes } from './app.routes';
 import { validate } from '@angular/forms/signals';
@@ -14,5 +14,10 @@ export const appConfig: ApplicationConfig = {
     	provideRouter(routes),
 		provideZonelessChangeDetection(),
 		provideErrorTooltips({ lang: demoLang, validate }), // providing the validate function for signal forms
+		provideErrorTooltipOptions({
+			textColor: 'rgb(127, 29, 29)',
+			borderColor: 'rgb(142, 28, 28)',
+			backgroundColor: 'rgb(244, 210, 210)',
+		}),
 	]
 };

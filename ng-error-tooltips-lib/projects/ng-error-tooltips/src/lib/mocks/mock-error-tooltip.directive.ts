@@ -61,6 +61,21 @@ import { ErrorTooltipOptions } from "../options/error-tooltip-options.interface"
       set maxWidth(val: string) {
         this.collectedOptions.maxWidth = val;
       }
+
+      @Input()
+      set textColor(val: string) {
+        this.collectedOptions.textColor = val;
+      }
+
+      @Input()
+      set backgroundColor(val: string) {
+        this.collectedOptions.backgroundColor = val;
+      }
+
+      @Input()
+      set borderColor(val: string) {
+        this.collectedOptions.borderColor = val;
+      }
     
       @Input()
       set pointerEvents(val: 'auto' | 'none') {

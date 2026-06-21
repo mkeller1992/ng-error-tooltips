@@ -10,6 +10,9 @@ export const defaultOptions: ErrorTooltipOptions = {
 	shadow: true,
 	offset: 8,
 	maxWidth: '350px',
+	textColor: '',
+	backgroundColor: '',
+	borderColor: '',
 	pointerEvents: 'auto', // 'none' would mean that there is no reaction to clicks
 
 	appendTooltipToBody: true,

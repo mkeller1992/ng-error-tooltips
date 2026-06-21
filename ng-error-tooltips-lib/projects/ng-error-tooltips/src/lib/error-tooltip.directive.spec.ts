@@ -10,6 +10,7 @@ import { Subject } from 'rxjs';
 import { ErrorTooltipDirective } from './error-tooltip.directive';
 import { defaultOptions } from './options/default-options.const';
 import { ErrorTooltipOptions } from './options/error-tooltip-options.interface';
+import { provideErrorTooltipOptions } from './options/error-tooltip-options.token';
 
 /**
  * Host A: binds BOTH [options] and [placement] (explicit placement wins)
@@ -239,6 +240,9 @@ describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host WITH e
 		expect(merged.pointerEvents).toBe(defaultOptions.pointerEvents);
 		expect(merged.shadow).toBe(defaultOptions.shadow);
 		expect(merged.offset).toBe(defaultOptions.offset);
+		expect(merged.textColor).toBe(defaultOptions.textColor);
+		expect(merged.backgroundColor).toBe(defaultOptions.backgroundColor);
+		expect(merged.borderColor).toBe(defaultOptions.borderColor);
 	});
 
 	it('should prefer explicit input bindings over options object and defaults', async () => {
@@ -263,6 +267,54 @@ describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host WITH e
 		expect(merged.placement).toBe('left');
 		expect(merged.zIndex).toBe(1234);
 		expect(merged.offset).toBe(defaultOptions.offset);
+	});
+
+	it('should merge custom text, background and border colors from options', async () => {
+		const { directive, fixture, component } = await setupHarness(HostWithExplicitPlacementComponent);
+
+		(component as any).options.set({
+			textColor: '#7f1d1d',
+			backgroundColor: '#fef3c7',
+			borderColor: '#dc2626',
+		});
+		fixture.detectChanges();
+		await flush2();
+
+		const merged = (directive as any).mergedOptions() as ErrorTooltipOptions;
+
+		expect(merged.textColor).toBe('#7f1d1d');
+		expect(merged.backgroundColor).toBe('#fef3c7');
+		expect(merged.borderColor).toBe('#dc2626');
+	});
+
+	it('should merge global tooltip options between defaults and local options', async () => {
+		await TestBed.configureTestingModule({
+			imports: [HostWithExplicitPlacementComponent],
+			providers: [
+				provideZonelessChangeDetection(),
+				FormBuilder,
+				provideErrorTooltipOptions({
+					textColor: '#111827',
+					backgroundColor: '#fef3c7',
+					borderColor: '#f97316',
+					maxWidth: '480px',
+					zIndex: 9999,
+				}),
+			],
+		}).compileComponents();
+
+		const fixture = TestBed.createComponent(HostWithExplicitPlacementComponent);
+		fixture.detectChanges();
+
+		const inputDebugElement = fixture.debugElement.query(By.directive(ErrorTooltipDirective));
+		const directive = inputDebugElement.injector.get(ErrorTooltipDirective);
+		const merged = (directive as any).mergedOptions() as ErrorTooltipOptions;
+
+		expect(merged.textColor).toBe('#111827');
+		expect(merged.backgroundColor).toBe('#fef3c7');
+		expect(merged.borderColor).toBe('#f97316');
+		expect(merged.maxWidth).toBe('480px');
+		expect(merged.zIndex).toBe(2000); // local [options] wins over global options
 	});
 
 	it('should create and attach tooltip component when showErrorTooltip is called and errors exist', async () => {
@@ -468,6 +520,83 @@ describe('ErrorTooltipDirective (signals-based inputs, zoneless) — host WITH e
 
 		(directive as any).refToTooltip.set(null);
 		expect(() => (directive as any).destroyTooltip()).not.toThrow();
+	});
+
+	it('should append tooltip to host parent when appendTooltipToBody is false', async () => {
+		const { directive, fixture, component, inputDebugElement } = await setupHarness(HostWithExplicitPlacementComponent);
+
+		(component as any).options.set({ appendTooltipToBody: false });
+		fixture.detectChanges();
+		await flush2();
+
+		const tooltipElement = document.createElement('div');
+		const fakeComponentRef = {
+			instance: {
+				showTooltip: vi.fn(),
+				setVisibilityAndPosition: vi.fn(),
+				userClickOnTooltip$: new Subject<void>(),
+			},
+			setInput: vi.fn(),
+			destroy: vi.fn(),
+			location: { nativeElement: tooltipElement },
+		};
+
+		vi.spyOn((directive as any).viewContainerRef, 'createComponent').mockReturnValue(fakeComponentRef as any);
+
+		(directive as any).setupTooltipComponent();
+
+		expect(inputDebugElement.nativeElement.parentElement.contains(tooltipElement)).toBe(true);
+	});
+
+	it('should hide the tooltip when the user clicks the tooltip', async () => {
+		const { directive } = await setupHarness(HostWithExplicitPlacementComponent);
+		const click$ = new Subject<void>();
+		const destroySpy = vi.spyOn(directive as any, 'destroyTooltip');
+
+		const fakeComponent = {
+			showTooltip: vi.fn(),
+			setVisibilityAndPosition: vi.fn(),
+			userClickOnTooltip$: click$,
+		};
+
+		(directive as any).refToTooltip.set({
+			instance: fakeComponent,
+			setInput: vi.fn(),
+			destroy: vi.fn(),
+			location: { nativeElement: document.createElement('div') },
+		});
+		(directive as any).isTooltipVisible.set(true);
+
+		(directive as any).attachListeners(fakeComponent);
+		click$.next();
+
+		expect(destroySpy).toHaveBeenCalled();
+	});
+
+	it('should update tooltip position when the host position changes', async () => {
+		const { directive } = await setupHarness(HostWithExplicitPlacementComponent);
+		const fakeComponent = {
+			showTooltip: vi.fn(),
+			setVisibilityAndPosition: vi.fn(),
+			userClickOnTooltip$: new Subject<void>(),
+		};
+
+		(directive as any).refToTooltip.set({
+			instance: fakeComponent,
+			setInput: vi.fn(),
+			destroy: vi.fn(),
+			location: { nativeElement: document.createElement('div') },
+		});
+		(directive as any).isTooltipVisible.set(true);
+		(directive as any).formControlPosition.set({ top: 1, left: 1 } as DOMRect);
+
+		vi.spyOn(directive as any, 'getFormControlPosition').mockReturnValue({ top: 2, left: 3 } as DOMRect);
+
+		(directive as any).attachListeners(fakeComponent);
+		vi.advanceTimersByTime(300);
+
+		expect(fakeComponent.setVisibilityAndPosition).toHaveBeenCalled();
+		expect((directive as any).formControlPosition()).toEqual({ top: 2, left: 3 });
 	});
 });
 

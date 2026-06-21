@@ -14,10 +14,5 @@ export const appConfig: ApplicationConfig = {
     	provideRouter(routes),
 		provideZonelessChangeDetection(),
 		provideErrorTooltips({ lang: demoLang, validate }), // providing the validate function for signal forms
-		provideErrorTooltipOptions({
-			textColor: 'rgb(127, 29, 29)',
-			borderColor: 'rgb(142, 28, 28)',
-			backgroundColor: 'rgb(244, 210, 210)',
-		}),
 	]
 };

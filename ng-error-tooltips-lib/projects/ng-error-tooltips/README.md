@@ -196,20 +196,19 @@ export class AppComponent {
 
 ---
 
-### Two ways to pass additional properties
+### Three ways to pass additional properties
 
-You can pass separate properties, such as `placement`:
+1. Set global defaults for all tooltips via `provideErrorTooltipOptions(...)` in your `ApplicationConfig`, as shown above in **Setup > Standalone apps**:
 
-```html
-<input
-  ngErrorTooltip
-  [placement]="'right'"
-  formControlName="nameInput"
-  placeholder="Enter your name*"
-  type="text">
+```ts
+provideErrorTooltipOptions({
+  textColor: '#7f1d1d',
+  backgroundColor: '#fff7ed',
+  borderColor: '#f97316',
+});
 ```
 
-Alternatively, pass one or more properties via an `ErrorTooltipOptions` object:
+2. Pass one or more properties via an `ErrorTooltipOptions` object:
 
 ```ts
 import { ErrorTooltipOptions } from 'ng-error-tooltips';
@@ -231,7 +230,18 @@ tooltipOptions: ErrorTooltipOptions = {
   type="number">
 ```
 
-**Note:** Explicit inputs (e.g. `[placement]`) override the same values provided via `[options]`.
+3. Pass explicit inputs directly on the control:
+
+```html
+<input
+  ngErrorTooltip
+  [placement]="'right'"
+  formControlName="nameInput"
+  placeholder="Enter your name*"
+  type="text">
+```
+
+**Note:** Tooltip options are merged as `library defaults < provideErrorTooltipOptions(...) < [options] < explicit inputs`.
 
 ---
 

@@ -1,9 +1,20 @@
-name: CI/CD Pipeline
+name: Deploy ng-error-tooltips to npmjs.com
 
 on:
   push:
-    branches:
-      - master
+    branches: [ master ]
+
+# Central versions and reusable action references
+env:
+  BASE_DIR: ./ng-error-tooltips-lib
+  PROJECT_NAME: ng-error-tooltips
+
+  NODE_VERSION: &node-version '24.x'
+  NPM_VERSION: &npm-version 'latest'
+
+  CHECKOUT_ACTION: &checkout-action 'actions/checkout@v7'
+  SETUP_NODE_ACTION: &setup-node-action 'actions/setup-node@v6.4.0'
+  CODECOV_ACTION: &codecov-action 'codecov/codecov-action@v7'
 
 # Needed for OIDC (Trusted Publishing) and for pushing tags back to the repo
 permissions:
@@ -13,26 +24,22 @@ permissions:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
-    # Set all constants here
-    env:
-      BASE_DIR: ./ng-error-tooltips-lib
-      PROJECT_NAME: ng-error-tooltips
 
     steps:
       # Checkout the repository to the runner
-      - uses: actions/checkout@v5
+      - uses: *checkout-action
         with:
           fetch-depth: 0   # ensure full history so tagging works reliably
 
       # Setup Node.js environment
       - name: Use Node.js
-        uses: actions/setup-node@v6
+        uses: *setup-node-action
         with:
-          node-version: '24.x'
+          node-version: ${{ env.NODE_VERSION }}
 
       # Ensure a recent npm that supports Trusted Publishing + provenance
       - name: Ensure recent npm
-        run: npm i -g npm@latest
+        run: npm i -g npm@${{ env.NPM_VERSION }}
 
       # Safety: remove any accidental project/user .npmrc that could force token auth
       - name: Remove local .npmrc if present
@@ -47,8 +54,8 @@ jobs:
         run: npm ci
         working-directory: ${{ env.BASE_DIR }}
         env:
-          npm_config_foreground_scripts: 'true'
-          NX_SKIP_NATIVE_BINARY_DOWNLOAD: 'true'
+          npm_config_foreground_scripts: 'true'   # stabilize nx postinstall on CI
+          NX_SKIP_NATIVE_BINARY_DOWNLOAD: 'true'  # prefer JS fallback
           NX_NATIVE: 'false'
           NX_DAEMON: 'false'
 
@@ -57,13 +64,33 @@ jobs:
         run: npm run test:ci
         working-directory: ${{ env.BASE_DIR }}
 
+      # List generated LCOV reports for troubleshooting
+      - name: List coverage reports
+        run: find coverage -name lcov.info -print
+        working-directory: ${{ env.BASE_DIR }}
+
+      # Copy the generated report to a predictable path for Codecov
+      - name: Normalize coverage report path
+        run: |
+          LCOV_FILE="$(find coverage -name lcov.info -print -quit)"
+          if [ -z "$LCOV_FILE" ]; then
+            echo "No lcov.info file found"
+            exit 1
+          fi
+
+          echo "Using coverage report: $LCOV_FILE"
+          mkdir -p coverage/codecov
+          cp "$LCOV_FILE" coverage/codecov/lcov.info
+        working-directory: ${{ env.BASE_DIR }}
+
       # Upload coverage to Codecov (tokenless with OIDC + Codecov App)
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: *codecov-action
         with:
           use_oidc: true
-          files: ${{ env.BASE_DIR }}/coverage/lcov.info  # point directly to LCOV file for faster uploads
+          files: ${{ env.BASE_DIR }}/coverage/codecov/lcov.info
           disable_search: true                           # skip auto-discovery to avoid noisy gcov/python warnings
+          fail_ci_if_error: true                         # fail the pipeline if the upload fails
 
       # Build the library from the specified subdirectory
       - name: Build Library
@@ -97,7 +124,7 @@ jobs:
         working-directory: ${{ env.BASE_DIR }}/dist/${{ env.PROJECT_NAME }}
         # No NODE_AUTH_TOKEN here — OIDC handles auth (Trusted Publishing)
 
-      # Set a version-tag for the deployed commit (annotated tag is more visible in some tools)
+      # Set a version-tag for the deployed commit
       - name: Tag commit
         if: env.execute_publish == 'true' && success()
         run: |
@@ -106,6 +133,3 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "v${{ env.CURRENT_VERSION }}-lib" -m "ng-error-tooltips v${{ env.CURRENT_VERSION }}"
           git push origin "v${{ env.CURRENT_VERSION }}-lib"
-
-
-

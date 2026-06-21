@@ -92,27 +92,6 @@ import {
 
 ---
 
-## Library folder structure
-
-The main library source lives in `ng-error-tooltips-lib/projects/ng-error-tooltips/src/lib`:
-
-```text
-lib/
-├─ error-tooltip.directive.ts            # Reactive Forms tooltip directive
-├─ error-tooltip-sig.directive.ts        # Signal Forms tooltip directive
-├─ error-tooltip-sig-form.directive.ts   # Container directive for showing/hiding Signal Forms tooltips
-├─ provide-error-tooltips.ts             # Provider setup for language and Signal Forms validation integration
-├─ error-tooltip-lang.token.ts           # Language configuration token
-├─ error-tooltip-sig-validate.token.ts   # Signal Forms validate integration token
-├─ error-payload.type.ts                 # Shared tooltip error payload type
-├─ mocks/                                # Lightweight directives for consumer unit tests
-├─ options/                              # Tooltip options interface and defaults
-├─ tooltip/                              # Tooltip component, template, styles and placement types
-└─ validators/                           # Reactive Forms and Signal Forms validators plus i18n messages
-```
-
----
-
 ## Usage
 
 ### Reactive Forms
